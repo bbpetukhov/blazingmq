@@ -2133,11 +2133,11 @@ int main(int argc, char* argv[])
 {
     TEST_PROLOG(bmqtst::TestHelper::e_DEFAULT);
 
-#if defined(BSLS_PLATFORM_OS_SOLARIS)
+// #if defined(BSLS_PLATFORM_OS_SOLARIS)
     bmqtst::TestHelperUtil::ignoreCheckDefAlloc() = true;
     // Disable default allocator check for this test until we can debug
     // it on Solaris
-#endif
+// #endif
 
     switch (_testCase) {
     case 0:
