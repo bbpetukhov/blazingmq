@@ -1,6 +1,9 @@
 name: Sanitize with AddressSanitizer, MemorySanitizer, ThreadSanitizer and UndefinedBehaviorSanitizer.
 
 on:
+  push:
+    branches:
+      - "**"
   pull_request_review:
     types: [submitted]
 
