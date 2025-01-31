@@ -75,6 +75,7 @@
 %token PLUS "+" MINUS "-";
 %token TIMES "*" DIVIDES "/" MODULUS "%";
 %token EQ "=" NE "<>" LT "<" LE "<=" GE ">=" GT ">";
+%token EXISTS "exists";
 
 %left OR;
 %left AND;
@@ -139,6 +140,15 @@ expression
         { $$ = ctx.makeBooleanBinaryExpression<SimpleEvaluator::Or>($1, $3); }
     | NOT expression
         { $$ = ctx.makeUnaryExpression<SimpleEvaluator::Not>($2); }
+    | EXISTS LPAR PROPERTY RPAR
+        {
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) \
+&& defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
+            $$ = ctx.makeUnaryExpression<SimpleEvaluator::Exists, bsl::string>(bsl::move($3));
+#else
+            $$ = ctx.makeUnaryExpression<SimpleEvaluator::Exists, bsl::string>($3);
+#endif
+        }
     | expression PLUS expression
         { $$ = ctx.makeNumBinaryExpression<bsl::plus>($1, $3); }
     | expression MINUS expression

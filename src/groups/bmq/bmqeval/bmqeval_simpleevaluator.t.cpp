@@ -520,6 +520,10 @@ static void test3_evaluation()
         {"i_0 != -9223372036854775807", true},  // -(2 ** 63) + 1
         {"i_0 != 9223372036854775807", true},   // 2 ** 63 - 1
         {"i_0 != -9223372036854775808", true},  // -(2 ** 63)
+
+        // exists
+        {"exists(i_42) && i_42 > 41", true},
+        {"exists(non_existing_property) && non_existing_property > 41", false},
     };
     const TestParameters* testParametersEnd = testParameters +
                                               sizeof(testParameters) /
