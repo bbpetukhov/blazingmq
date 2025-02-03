@@ -55,6 +55,8 @@ class MockPropertiesReader : public PropertiesReader {
         d_map["i_42"]    = bdld::Datum::createInteger(42);
         d_map["i64_42"]  = bdld::Datum::createInteger64(42, allocator);
         d_map["s_foo"]   = bdld::Datum::createStringRef("foo", allocator);
+        
+        d_map["i_minus42"] = bdld::Datum::createInteger(-42);
     }
     // Destroy this object.
 
@@ -426,6 +428,12 @@ static void test3_evaluation()
 
         // mixed integer types
         {"i_42 == 42", true},
+
+        {"i_minus42 == -42", true},
+        {"-i_minus42 == 42", true},
+        {"abs(i_minus42) == 42", true},
+        {"abs(i_minus42) == i_42", true},
+        {"abs(i_42) == i_42", true},
 
         // string comparisons
         {"s_foo == \"foo\"", true},

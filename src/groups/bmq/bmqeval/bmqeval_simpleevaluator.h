@@ -513,6 +513,33 @@ class SimpleEvaluator {
         evaluate(EvaluationContext& context) const BSLS_KEYWORD_OVERRIDE;
     };
 
+    // ---
+    // Abs
+    // ---
+
+    class Abs : public Expression {
+      private:
+        // DATA
+
+        // The expression to negate.
+        ExpressionPtr d_expression;
+
+      public:
+        // CREATORS
+
+        /// Create an object that implements arithmetic negation.
+        explicit Abs(ExpressionPtr expression);
+
+        // ACCESSORS
+
+        /// Evaluate `expression` passed to the constructor. If it is an
+        /// integer, return the negated value as an Int64 Datum. Otherwise,
+        /// set the error in the context to  e_TYPE, stop the evaluation,
+        /// and return a null datum.
+        bdld::Datum
+        evaluate(EvaluationContext& context) const BSLS_KEYWORD_OVERRIDE;
+    };
+
   private:
     // SimpleEvaluator(const SimpleEvaluator& other) BSLS_KEYWORD_DELETED;
     // SimpleEvaluator& operator=(const SimpleEvaluator& other)
@@ -995,6 +1022,14 @@ inline SimpleEvaluator::Not::Not(ExpressionPtr expression)
 {
 }
 
+// ------------------------------------------
+// template class SimpleEvaluator::UnaryMinus
+// ------------------------------------------
+
+inline SimpleEvaluator::Abs::Abs(ExpressionPtr expression)
+: d_expression(expression)
+{
+}
 // ------------------------
 // class CompilationContext
 // ------------------------

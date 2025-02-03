@@ -393,5 +393,37 @@ bdld::Datum SimpleEvaluator::Exists::evaluate(EvaluationContext& context) const
     return bdld::Datum::createBoolean(true);
 }
 
+// ---------------------------------
+// class SimpleEvaluator::Abs
+// ---------------------------------
+
+bdld::Datum
+SimpleEvaluator::Abs::evaluate(EvaluationContext& context) const
+{
+    bdld::Datum expr = d_expression->evaluate(context);
+
+    if (context.d_stop) {
+        return bdld::Datum::createNull();  // RETURN
+    }
+
+    bsls::Types::Int64 value;
+
+    if (expr.isInteger64()) {
+        value = expr.theInteger64();
+    }
+    else if (expr.isInteger()) {
+        value = expr.theInteger();
+    }
+    else {
+        context.d_lastError = ErrorType::e_TYPE;
+
+        return context.stop();  // RETURN
+    }
+
+    value = abs(value);
+
+    return bdld::Datum::createInteger64(value, context.d_allocator);
+}
+
 }  // close package namespace
 }  // close enterprise namespace

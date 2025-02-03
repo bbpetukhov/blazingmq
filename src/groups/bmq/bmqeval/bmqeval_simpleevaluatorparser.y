@@ -76,6 +76,7 @@
 %token TIMES "*" DIVIDES "/" MODULUS "%";
 %token EQ "=" NE "<>" LT "<" LE "<=" GE ">=" GT ">";
 %token EXISTS "exists";
+%token ABS "abs";
 
 %left OR;
 %left AND;
@@ -97,18 +98,18 @@ predicate : expression END
         }
 
 expression
-    : PROPERTY
-        {
-
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) \
+    : PROPERTY 
+    {
+        
+        #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) \
 && defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
             $$ = ctx.makeUnaryExpression<SimpleEvaluator::Property, bsl::string>(bsl::move($1));
 #else
             $$ = ctx.makeUnaryExpression<SimpleEvaluator::Property, bsl::string>($1);
 #endif
 
-            ++ctx.d_numProperties;
-        }
+        ++ctx.d_numProperties;
+    }
     | INTEGER
         { $$ = ctx.makeLiteral<SimpleEvaluator::IntegerLiteral>($1); }
     | OVERFLOW
@@ -149,6 +150,8 @@ expression
             $$ = ctx.makeUnaryExpression<SimpleEvaluator::Exists, bsl::string>($3);
 #endif
         }
+    | ABS LPAR expression RPAR
+        { $$ = ctx.makeUnaryExpression<SimpleEvaluator::Abs>($3); }
     | expression PLUS expression
         { $$ = ctx.makeNumBinaryExpression<bsl::plus>($1, $3); }
     | expression MINUS expression
