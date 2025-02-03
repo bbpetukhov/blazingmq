@@ -55,7 +55,7 @@ class MockPropertiesReader : public PropertiesReader {
         d_map["i_42"]    = bdld::Datum::createInteger(42);
         d_map["i64_42"]  = bdld::Datum::createInteger64(42, allocator);
         d_map["s_foo"]   = bdld::Datum::createStringRef("foo", allocator);
-        
+
         d_map["i_minus42"] = bdld::Datum::createInteger(-42);
     }
     // Destroy this object.
@@ -530,6 +530,8 @@ static void test3_evaluation()
         {"i_0 != -9223372036854775808", true},  // -(2 ** 63)
 
         // exists
+        {"exists(i_42)", true},
+        {"exists(non_existing_property)", false},
         {"exists(i_42) && i_42 > 41", true},
         {"exists(non_existing_property) && non_existing_property > 41", false},
     };

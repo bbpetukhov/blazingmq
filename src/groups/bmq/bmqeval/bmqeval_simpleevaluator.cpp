@@ -397,8 +397,7 @@ bdld::Datum SimpleEvaluator::Exists::evaluate(EvaluationContext& context) const
 // class SimpleEvaluator::Abs
 // ---------------------------------
 
-bdld::Datum
-SimpleEvaluator::Abs::evaluate(EvaluationContext& context) const
+bdld::Datum SimpleEvaluator::Abs::evaluate(EvaluationContext& context) const
 {
     bdld::Datum expr = d_expression->evaluate(context);
 

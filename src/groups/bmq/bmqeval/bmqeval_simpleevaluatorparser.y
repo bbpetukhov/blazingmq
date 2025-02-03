@@ -86,6 +86,7 @@
 %left TIMES DIVIDES MODULUS;
 %right NOT "!";
 
+%type<bsl::string> variable;
 %type<SimpleEvaluator::ExpressionPtr> expression;
 %type<SimpleEvaluator::ExpressionPtr> predicate;
 %start predicate
@@ -97,9 +98,15 @@ predicate : expression END
             ctx.d_expression = $1;
         }
 
+variable
+    : PROPERTY
+        {
+            ++ctx.d_numProperties;
+            $$ = $1;
+        }
+
 expression
-    : PROPERTY 
-    {
+    : variable {
         
         #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) \
 && defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
@@ -107,8 +114,6 @@ expression
 #else
             $$ = ctx.makeUnaryExpression<SimpleEvaluator::Property, bsl::string>($1);
 #endif
-
-        ++ctx.d_numProperties;
     }
     | INTEGER
         { $$ = ctx.makeLiteral<SimpleEvaluator::IntegerLiteral>($1); }
@@ -141,7 +146,7 @@ expression
         { $$ = ctx.makeBooleanBinaryExpression<SimpleEvaluator::Or>($1, $3); }
     | NOT expression
         { $$ = ctx.makeUnaryExpression<SimpleEvaluator::Not>($2); }
-    | EXISTS LPAR PROPERTY RPAR
+    | EXISTS LPAR variable RPAR
         {
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) \
 && defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
