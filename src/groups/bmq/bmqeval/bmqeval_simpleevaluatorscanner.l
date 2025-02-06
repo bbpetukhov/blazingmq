@@ -37,6 +37,31 @@
 	return SimpleEvaluatorParser::make_EXISTS();
 }
 
+"form1" {
+	updatePosition();
+	return SimpleEvaluatorParser::make_FORM1();
+}
+
+"form2" {
+	updatePosition();
+	return SimpleEvaluatorParser::make_FORM2();
+}
+
+"form3" {
+	updatePosition();
+	return SimpleEvaluatorParser::make_FORM3();
+}
+
+"form4" {
+	updatePosition();
+	return SimpleEvaluatorParser::make_FORM4();
+}
+
+"form5" {
+	updatePosition();
+	return SimpleEvaluatorParser::make_FORM5();
+}
+
 "abs" {
 	updatePosition();
 	return SimpleEvaluatorParser::make_ABS();

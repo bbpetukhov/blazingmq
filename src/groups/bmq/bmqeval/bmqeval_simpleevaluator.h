@@ -540,6 +540,36 @@ class SimpleEvaluator {
         evaluate(EvaluationContext& context) const BSLS_KEYWORD_OVERRIDE;
     };
 
+    // ---
+    // Form1
+    // ---
+
+    class Form1 : public Expression {
+      private:
+        // DATA
+
+        // The name of the property.
+        bsl::string d_name;
+        bsl::vector<bsl::string> d_names;
+
+      public:
+        // CREATORS
+
+        /// Create an object that evaluates property `name`, in the
+        /// evaluation context, as a boolean.
+        explicit Form1(const bsl::string& name);
+
+        // ACCESSORS
+
+        /// Evaluate `expression` passed to the constructor. If it is a
+        /// boolean, return the negated value as a boolean Datum.
+        /// Otherwise, set the error in the context to  e_TYPE, stop the
+        /// evaluation, and return a null datum.
+        bdld::Datum
+        evaluate(EvaluationContext& context) const BSLS_KEYWORD_OVERRIDE;
+    };
+
+
   private:
     // SimpleEvaluator(const SimpleEvaluator& other) BSLS_KEYWORD_DELETED;
     // SimpleEvaluator& operator=(const SimpleEvaluator& other)
@@ -567,10 +597,10 @@ class SimpleEvaluator {
         k_MAX_EXPRESSION_LENGTH = 128,
 
         /// The maximum number of operators allowed in a single expression.
-        k_MAX_OPERATORS = 10,
+        k_MAX_OPERATORS = 33,
 
         /// The maximum number of properties allowed in a single expression.
-        k_MAX_PROPERTIES = 10
+        k_MAX_PROPERTIES = 33
     };
 
     // CREATORS

@@ -52,6 +52,7 @@ class MockPropertiesReader : public PropertiesReader {
         d_map["i_1"]     = bdld::Datum::createInteger(1);
         d_map["i_2"]     = bdld::Datum::createInteger(2);
         d_map["i_3"]     = bdld::Datum::createInteger(3);
+        d_map["i_4"]     = bdld::Datum::createInteger(4);
         d_map["i_42"]    = bdld::Datum::createInteger(42);
         d_map["i64_42"]  = bdld::Datum::createInteger64(42, allocator);
         d_map["s_foo"]   = bdld::Datum::createStringRef("foo", allocator);
@@ -108,6 +109,230 @@ static void testN1_SimpleEvaluator()
     PV("GoogleBenchmark is not supported on this platform, skipping...")
 }
 #endif
+
+
+#ifdef BSLS_PLATFORM_OS_LINUX
+static void testN2_SimpleEvaluator_GoogleBenchmark(benchmark::State& state)
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+
+    bdlma::LocalSequentialAllocator<2048> localAllocator;
+    MockPropertiesReader                  reader(&localAllocator);
+    EvaluationContext evaluationContext(&reader, &localAllocator);
+
+    CompilationContext compilationContext(&localAllocator);
+    SimpleEvaluator    evaluator;
+
+    BMQTST_ASSERT(evaluator.compile("i_0 == 0",
+                                    compilationContext) == 0);
+
+    BMQTST_ASSERT_EQ(evaluator.evaluate(evaluationContext), true);
+
+    // <time>
+    for (auto _ : state) {
+        evaluator.evaluate(evaluationContext);
+    }
+    // </time>
+}
+#else
+static void testN2_SimpleEvaluator()
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+    PV("GoogleBenchmark is not supported on this platform, skipping...")
+}
+#endif
+
+
+#ifdef BSLS_PLATFORM_OS_LINUX
+static void testN3_SimpleEvaluator_GoogleBenchmark(benchmark::State& state)
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+
+    bdlma::LocalSequentialAllocator<2048> localAllocator;
+    MockPropertiesReader                  reader(&localAllocator);
+    EvaluationContext evaluationContext(&reader, &localAllocator);
+
+    CompilationContext compilationContext(&localAllocator);
+    SimpleEvaluator    evaluator;
+
+    BMQTST_ASSERT(evaluator.compile("i_0 == 0 && i_1 == 1",
+                                    compilationContext) == 0);
+
+    BMQTST_ASSERT_EQ(evaluator.evaluate(evaluationContext), true);
+
+    // <time>
+    for (auto _ : state) {
+        evaluator.evaluate(evaluationContext);
+    }
+    // </time>
+}
+#else
+static void testN3_SimpleEvaluator()
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+    PV("GoogleBenchmark is not supported on this platform, skipping...")
+}
+#endif
+
+
+
+#ifdef BSLS_PLATFORM_OS_LINUX
+static void testN4_SimpleEvaluator_GoogleBenchmark(benchmark::State& state)
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+
+    bdlma::LocalSequentialAllocator<2048> localAllocator;
+    MockPropertiesReader                  reader(&localAllocator);
+    EvaluationContext evaluationContext(&reader, &localAllocator);
+
+    CompilationContext compilationContext(&localAllocator);
+    SimpleEvaluator    evaluator;
+
+    BMQTST_ASSERT(evaluator.compile("i_0 == 0 && i_1 == 1 && i_2 == 2 ",
+                                    compilationContext) == 0);
+
+    BMQTST_ASSERT_EQ(evaluator.evaluate(evaluationContext), true);
+
+    // <time>
+    for (auto _ : state) {
+        evaluator.evaluate(evaluationContext);
+    }
+    // </time>
+}
+#else
+static void testN4_SimpleEvaluator()
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+    PV("GoogleBenchmark is not supported on this platform, skipping...")
+}
+#endif
+
+
+#ifdef BSLS_PLATFORM_OS_LINUX
+static void testN5_SimpleEvaluator_GoogleBenchmark(benchmark::State& state)
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+
+    bdlma::LocalSequentialAllocator<2048> localAllocator;
+    MockPropertiesReader                  reader(&localAllocator);
+    EvaluationContext evaluationContext(&reader, &localAllocator);
+
+    CompilationContext compilationContext(&localAllocator);
+    SimpleEvaluator    evaluator;
+
+    BMQTST_ASSERT(evaluator.compile("i_0 == 0 && i_1 == 1 && i_2 == 2 && i_3 == 3",
+                                    compilationContext) == 0);
+
+    BMQTST_ASSERT_EQ(evaluator.evaluate(evaluationContext), true);
+
+    // <time>
+    for (auto _ : state) {
+        evaluator.evaluate(evaluationContext);
+    }
+    // </time>
+}
+#else
+static void testN5_SimpleEvaluator()
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+    PV("GoogleBenchmark is not supported on this platform, skipping...")
+}
+#endif
+
+
+#ifdef BSLS_PLATFORM_OS_LINUX
+static void testN6_SimpleEvaluator_GoogleBenchmark(benchmark::State& state)
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+
+    bdlma::LocalSequentialAllocator<2048> localAllocator;
+    MockPropertiesReader                  reader(&localAllocator);
+    EvaluationContext evaluationContext(&reader, &localAllocator);
+
+    CompilationContext compilationContext(&localAllocator);
+    SimpleEvaluator    evaluator;
+
+    BMQTST_ASSERT(evaluator.compile("i_0 == 0 && i_1 == 1 && i_2 == 2 && i_3 == 3 && i_4 == 4",
+                                    compilationContext) == 0);
+
+    BMQTST_ASSERT_EQ(evaluator.evaluate(evaluationContext), true);
+
+    // <time>
+    for (auto _ : state) {
+        evaluator.evaluate(evaluationContext);
+    }
+    // </time>
+}
+#else
+static void testN6_SimpleEvaluator()
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+    PV("GoogleBenchmark is not supported on this platform, skipping...")
+}
+#endif
+
+#ifdef BSLS_PLATFORM_OS_LINUX
+static void testForm_SimpleEvaluator_GoogleBenchmark(benchmark::State& state)
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+
+    bdlma::LocalSequentialAllocator<2048> localAllocator;
+    MockPropertiesReader                  reader(&localAllocator);
+    EvaluationContext evaluationContext(&reader, &localAllocator);
+
+    CompilationContext compilationContext(&localAllocator);
+    SimpleEvaluator    evaluator;
+
+    BMQTST_ASSERT(evaluator.compile("form1(i_42)", compilationContext) == 0);
+
+    BMQTST_ASSERT_EQ(evaluator.evaluate(evaluationContext), true);
+
+    // <time>
+    for (auto _ : state) {
+        evaluator.evaluate(evaluationContext);
+    }
+    // </time>
+}
+#else
+static void testForm_SimpleEvaluator()
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+    PV("GoogleBenchmark is not supported on this platform, skipping...")
+}
+#endif
+
+
+#ifdef BSLS_PLATFORM_OS_LINUX
+static void testCircle_SimpleEvaluator_GoogleBenchmark(benchmark::State& state)
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+
+    bdlma::LocalSequentialAllocator<2048> localAllocator;
+    MockPropertiesReader                  reader(&localAllocator);
+    EvaluationContext evaluationContext(&reader, &localAllocator);
+
+    CompilationContext compilationContext(&localAllocator);
+    SimpleEvaluator    evaluator;
+
+    BMQTST_ASSERT(evaluator.compile(
+        "(i_0 - i_1)*(i_0 - i_1) + (i_2 - i_3)*(i_2 - i_3) < i_42*i_42", compilationContext) == 0);
+
+    BMQTST_ASSERT_EQ(evaluator.evaluate(evaluationContext), true);
+
+    // <time>
+    for (auto _ : state) {
+        evaluator.evaluate(evaluationContext);
+    }
+    // </time>
+}
+#else
+static void testCircle_SimpleEvaluator()
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+    PV("GoogleBenchmark is not supported on this platform, skipping...")
+}
+#endif
+
 
 // ============================================================================
 //                                    TESTS
@@ -576,7 +801,20 @@ int main(int argc, char* argv[])
     case 3: test3_evaluation(); break;
     case 2: test2_propertyNames(); break;
     case 1: test1_compilationErrors(); break;
-    case -1: BMQTST_BENCHMARK(testN1_SimpleEvaluator); break;
+    case -1: BMQTST_BENCHMARK_WITH_ARGS(testN1_SimpleEvaluator, Range(8, 8<<10)); break;
+    case -2: 
+        BMQTST_BENCHMARK_WITH_ARGS(testN2_SimpleEvaluator, Range(8, 8<<10));
+        BMQTST_BENCHMARK_WITH_ARGS(testN3_SimpleEvaluator, Range(8, 8<<10));
+        BMQTST_BENCHMARK_WITH_ARGS(testN4_SimpleEvaluator, Range(8, 8<<10));
+        BMQTST_BENCHMARK_WITH_ARGS(testN5_SimpleEvaluator, Range(8, 8<<10));
+        BMQTST_BENCHMARK_WITH_ARGS(testN6_SimpleEvaluator, Range(8, 8<<10));
+        break;
+    case -3:
+        BMQTST_BENCHMARK_WITH_ARGS(testForm_SimpleEvaluator, Range(8, 8<<10));
+        break;
+    case -4:
+        BMQTST_BENCHMARK_WITH_ARGS(testCircle_SimpleEvaluator, Range(8, 8<<10));
+        break;
     default: {
         cerr << "WARNING: CASE '" << _testCase << "' NOT FOUND." << endl;
         bmqtst::TestHelperUtil::testStatus() = -1;

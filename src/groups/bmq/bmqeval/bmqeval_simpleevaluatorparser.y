@@ -76,6 +76,11 @@
 %token TIMES "*" DIVIDES "/" MODULUS "%";
 %token EQ "=" NE "<>" LT "<" LE "<=" GE ">=" GT ">";
 %token EXISTS "exists";
+%token FORM1 "form1";
+%token FORM2 "form2";
+%token FORM3 "form3";
+%token FORM4 "form4";
+%token FORM5 "form5";
 %token ABS "abs";
 
 %left OR;
@@ -157,6 +162,8 @@ expression
         }
     | ABS LPAR expression RPAR
         { $$ = ctx.makeUnaryExpression<SimpleEvaluator::Abs>($3); }
+    | FORM1 LPAR variable RPAR
+        { $$ = ctx.makeUnaryExpression<SimpleEvaluator::Form1, bsl::string>($3); }
     | expression PLUS expression
         { $$ = ctx.makeNumBinaryExpression<bsl::plus>($1, $3); }
     | expression MINUS expression

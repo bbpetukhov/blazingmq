@@ -181,7 +181,7 @@ fi
 # :: Build the BlazingMQ repo :::::::::::::::::::::::::::::::::::::::::::::::::
 CMAKE_OPTIONS=(\
     -DBDE_BUILD_TARGET_64=1 \
-    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_LIBDIR="lib" \
     -DCMAKE_INSTALL_PREFIX="${DIR_INSTALL}" \
     -DCMAKE_MODULE_PATH="${DIR_THIRDPARTY}/bde-tools/cmake;${DIR_THIRDPARTY}/bde-tools/BdeBuildSystem" \

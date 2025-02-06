@@ -424,5 +424,41 @@ bdld::Datum SimpleEvaluator::Abs::evaluate(EvaluationContext& context) const
     return bdld::Datum::createInteger64(value, context.d_allocator);
 }
 
+// ---------------------------------
+// class SimpleEvaluator::Form1
+// ---------------------------------
+
+SimpleEvaluator::Form1::Form1(const bsl::string& name)
+: d_name(name)
+{
+    d_names.push_back("i_0");
+    // d_names.push_back("i_1");
+    // d_names.push_back("i_2");
+    // d_names.push_back("i_3");
+    // d_names.push_back("i_4");
+}
+
+bdld::Datum
+SimpleEvaluator::Form1::evaluate(EvaluationContext& context) const
+{
+    bool result = true;
+
+    for(bsls::Types::Int64 i=0; i<d_names.size(); i++) {
+        bdld::Datum value = context.d_propertiesReader->get(d_names[i],
+                                                        context.d_allocator);
+
+        if (value.isError()) {
+            context.d_stop = true;
+            context.d_lastError = ErrorType::e_UNDEFINED;
+        }
+
+        bsls::Types::Int64 x = value.theInteger();
+
+        result = result && x == i;
+    }
+
+    return bdld::Datum::createBoolean(result);
+}
+
 }  // close package namespace
 }  // close enterprise namespace
