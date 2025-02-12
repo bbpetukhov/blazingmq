@@ -41,23 +41,33 @@ class MockPropertiesReader : public PropertiesReader {
   public:
     // PUBLIC DATA
     bsl::unordered_map<bsl::string, bdld::Datum> d_map;
+    bsl::vector<bdld::Datum> d_vector;
+    
 
     // CREATORS
     MockPropertiesReader(bslma::Allocator* allocator)
-    : d_map(allocator)
+    : d_map(allocator), d_vector(allocator)
     {
+        for(int i=0; i<5; i++) d_vector.emplace_back(bdld::Datum::createInteger(i));
+
         d_map["b_true"]  = bdld::Datum::createBoolean(true);
         d_map["b_false"] = bdld::Datum::createBoolean(false);
-        d_map["i_0"]     = bdld::Datum::createInteger(0);
+        d_map["i_0"]     = bdld::Datum::createInteger(0); 
         d_map["i_1"]     = bdld::Datum::createInteger(1);
         d_map["i_2"]     = bdld::Datum::createInteger(2);
         d_map["i_3"]     = bdld::Datum::createInteger(3);
         d_map["i_4"]     = bdld::Datum::createInteger(4);
         d_map["i_42"]    = bdld::Datum::createInteger(42);
         d_map["i64_42"]  = bdld::Datum::createInteger64(42, allocator);
+        d_map["s_longstring"]   = bdld::Datum::createStringRef("longstringlongstringlongstringlongstringlongstringlongstringlongstringlongstringlongstringlongstring", allocator);
         d_map["s_foo"]   = bdld::Datum::createStringRef("foo", allocator);
+        d_map["s_foo1"]   = bdld::Datum::createStringRef("foo1", allocator);
+        d_map["s_foo2"]   = bdld::Datum::createStringRef("foo2", allocator);
+        d_map["s_foo3"]   = bdld::Datum::createStringRef("foo3", allocator);
+        d_map["s_foo4"]   = bdld::Datum::createStringRef("foo4", allocator);
 
         d_map["i_minus42"] = bdld::Datum::createInteger(-42);
+        d_map["exists"] = bdld::Datum::createInteger(-42);
     }
     // Destroy this object.
 
@@ -77,7 +87,51 @@ class MockPropertiesReader : public PropertiesReader {
 
         return iter->second;
     }
+
+    bdld::Datum get(size_t i, bslma::Allocator*) BSLS_KEYWORD_OVERRIDE
+    {
+        if (i >= d_vector.size()) {
+            return bdld::Datum::createError(-1);  // RETURN
+        }
+        return d_vector[i];
+    }
 };
+
+
+#ifdef BSLS_PLATFORM_OS_LINUX
+static void testStr_SimpleEvaluator_GoogleBenchmark(benchmark::State& state)
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+
+    bdlma::LocalSequentialAllocator<2048> localAllocator;
+    MockPropertiesReader                  reader(&localAllocator);
+    EvaluationContext evaluationContext(&reader, &localAllocator);
+
+    CompilationContext compilationContext(&localAllocator);
+    SimpleEvaluator    evaluator;
+
+    // BMQTST_ASSERT(evaluator.compile("s_foo==\"foo\" && s_foo1==\"foo1\" && s_foo2==\"foo2\" && s_foo3==\"foo3\" && s_foo4==\"foo4\"",
+    // BMQTST_ASSERT(evaluator.compile("s_foo==\"foo\" && s_foo==\"foo\" && s_foo==\"foo\" && s_foo==\"foo\" && s_foo==\"foo\"",
+    // BMQTST_ASSERT(evaluator.compile("s_longstring==\"longstring\" && s_longstring==\"longstring\" && s_longstring==\"longstring\" && s_longstring==\"longstring\" && s_longstring==\"longstring\"",
+    BMQTST_ASSERT(evaluator.compile("s_longstring==\"longstringlongstringlongstringlongstringlongstringlongstringlongstringlongstringlongstringlongstring\"",
+                                    compilationContext) == 0);
+
+    BMQTST_ASSERT_EQ(evaluator.evaluate(evaluationContext), true);
+
+    // <time>
+    for (auto _ : state) {
+        evaluator.evaluate(evaluationContext);
+    }
+    // </time>
+}
+#else
+static void testStr_SimpleEvaluator()
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+    PV("GoogleBenchmark is not supported on this platform, skipping...")
+}
+#endif
+
 
 #ifdef BSLS_PLATFORM_OS_LINUX
 static void testN1_SimpleEvaluator_GoogleBenchmark(benchmark::State& state)
@@ -332,6 +386,38 @@ static void testCircle_SimpleEvaluator()
     PV("GoogleBenchmark is not supported on this platform, skipping...")
 }
 #endif
+
+
+#ifdef BSLS_PLATFORM_OS_LINUX
+static void testExists_SimpleEvaluator_GoogleBenchmark(benchmark::State& state)
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+
+    bdlma::LocalSequentialAllocator<2048> localAllocator;
+    MockPropertiesReader                  reader(&localAllocator);
+    EvaluationContext evaluationContext(&reader, &localAllocator);
+
+    CompilationContext compilationContext(&localAllocator);
+    SimpleEvaluator    evaluator;
+
+    BMQTST_ASSERT(evaluator.compile("exists(exists) && i_0 == 0", compilationContext) == 0);
+
+    BMQTST_ASSERT_EQ(evaluator.evaluate(evaluationContext), true);
+
+    // <time>
+    for (auto _ : state) {
+        evaluator.evaluate(evaluationContext);
+    }
+    // </time>
+}
+#else
+static void testExists_SimpleEvaluator()
+{
+    bmqtst::TestHelper::printTestName("GOOGLE BENCHMARK: SimpleEvaluator");
+    PV("GoogleBenchmark is not supported on this platform, skipping...")
+}
+#endif
+
 
 
 // ============================================================================
@@ -814,6 +900,13 @@ int main(int argc, char* argv[])
         break;
     case -4:
         BMQTST_BENCHMARK_WITH_ARGS(testCircle_SimpleEvaluator, Range(8, 8<<10));
+        break;
+    case -5:
+        BMQTST_BENCHMARK_WITH_ARGS(testN6_SimpleEvaluator, Range(8, 8<<10));
+        BMQTST_BENCHMARK_WITH_ARGS(testStr_SimpleEvaluator, Range(8, 8<<10));
+        break;
+    case -6:
+        BMQTST_BENCHMARK_WITH_ARGS(testExists_SimpleEvaluator, Range(8, 8<<10));
         break;
     default: {
         cerr << "WARNING: CASE '" << _testCase << "' NOT FOUND." << endl;

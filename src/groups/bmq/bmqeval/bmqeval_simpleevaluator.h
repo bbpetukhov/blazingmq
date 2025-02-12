@@ -130,6 +130,10 @@ class PropertiesReader {
     /// Use the specified `allocator` for any memory allocation.
     virtual bdld::Datum get(const bsl::string& name,
                             bslma::Allocator*  allocator) = 0;
+
+    virtual bdld::Datum get(size_t i, bslma::Allocator*  allocator) {
+      return bdld::Datum::createError(-1);  // RETURN    
+    }
 };
 
 // =====================
@@ -550,7 +554,12 @@ class SimpleEvaluator {
 
         // The name of the property.
         bsl::string d_name;
-        bsl::vector<bsl::string> d_names;
+       
+        bsl::string d_name0;
+        bsl::string d_name1;
+        bsl::string d_name2;
+        bsl::string d_name3;
+        bsl::string d_name4;
 
       public:
         // CREATORS

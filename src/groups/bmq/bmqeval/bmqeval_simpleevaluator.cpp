@@ -429,34 +429,61 @@ bdld::Datum SimpleEvaluator::Abs::evaluate(EvaluationContext& context) const
 // ---------------------------------
 
 SimpleEvaluator::Form1::Form1(const bsl::string& name)
-: d_name(name)
+: d_name(name), 
+d_name0("i_0"),
+d_name1("i_1"),
+d_name2("i_2"),
+d_name3("i_3"),
+d_name4("i_4")
 {
-    d_names.push_back("i_0");
-    // d_names.push_back("i_1");
-    // d_names.push_back("i_2");
-    // d_names.push_back("i_3");
-    // d_names.push_back("i_4");
+  
 }
 
 bdld::Datum
 SimpleEvaluator::Form1::evaluate(EvaluationContext& context) const
 {
-    bool result = true;
+    // bool result = true;
 
-    for(bsls::Types::Int64 i=0; i<d_names.size(); i++) {
-        bdld::Datum value = context.d_propertiesReader->get(d_names[i],
-                                                        context.d_allocator);
+    // for(bsls::Types::Int64 i=0; i<d_names.size(); i++) {
+    //     bdld::Datum value = context.d_propertiesReader->get(d_names[i],
+    //                                                     context.d_allocator);
 
-        if (value.isError()) {
-            context.d_stop = true;
-            context.d_lastError = ErrorType::e_UNDEFINED;
-        }
+    // if (value.isError()) {
+    //     context.d_stop = true;
+    //     context.d_lastError = ErrorType::e_UNDEFINED;
+    // }
 
-        bsls::Types::Int64 x = value.theInteger();
+    //     bsls::Types::Int64 x = value.theInteger();
 
-        result = result && x == i;
-    }
+    //     result = result && x == i;
+    // }
 
+    // bdld::Datum value0 = context.d_propertiesReader->get(d_name0, context.d_allocator);
+    // bsls::Types::Int64 x0 = value0.theInteger();
+    // bdld::Datum value1 = context.d_propertiesReader->get(d_name1, context.d_allocator);
+    // bsls::Types::Int64 x1 = value0.theInteger();
+    // bdld::Datum value2 = context.d_propertiesReader->get(d_name2, context.d_allocator);
+    // bsls::Types::Int64 x2 = value0.theInteger();
+    // bdld::Datum value3 = context.d_propertiesReader->get(d_name3, context.d_allocator);
+    // bsls::Types::Int64 x3 = value0.theInteger();
+    // bdld::Datum value4 = context.d_propertiesReader->get(d_name4, context.d_allocator);
+    // bsls::Types::Int64 x4 = value0.theInteger();
+
+    // 116ns:
+    int x0 = context.d_propertiesReader->get(d_name0, context.d_allocator).theInteger();
+    int x1 = context.d_propertiesReader->get(d_name1, context.d_allocator).theInteger();
+    int x2 = context.d_propertiesReader->get(d_name2, context.d_allocator).theInteger();
+    int x3 = context.d_propertiesReader->get(d_name3, context.d_allocator).theInteger();
+    int x4 = context.d_propertiesReader->get(d_name4, context.d_allocator).theInteger();
+
+    // 10ns:
+    // int x0 = context.d_propertiesReader->get(0u, context.d_allocator).theInteger();
+    // int x1 = context.d_propertiesReader->get(1u, context.d_allocator).theInteger();
+    // int x2 = context.d_propertiesReader->get(2u, context.d_allocator).theInteger();
+    // int x3 = context.d_propertiesReader->get(3u, context.d_allocator).theInteger();
+    // int x4 = context.d_propertiesReader->get(4u, context.d_allocator).theInteger();
+     
+    bool result = x0==0 && x1==1 && x2==2 && x3==3 && x4==4;
     return bdld::Datum::createBoolean(result);
 }
 
