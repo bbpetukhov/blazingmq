@@ -34,7 +34,7 @@
 
 "exists" {
 	updatePosition();
-	return SimpleEvaluatorParser::make_EXISTS();
+	return SimpleEvaluatorParser::make_EXISTS(yytext);
 }
 
 "form1" {

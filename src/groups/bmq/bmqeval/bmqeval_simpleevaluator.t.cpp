@@ -845,6 +845,9 @@ static void test3_evaluation()
         {"exists(non_existing_property)", false},
         {"exists(i_42) && i_42 > 41", true},
         {"exists(non_existing_property) && non_existing_property > 41", false},
+
+        {"exists == -42", true},
+        {"exists(exists)", true},
     };
     const TestParameters* testParametersEnd = testParameters +
                                               sizeof(testParameters) /

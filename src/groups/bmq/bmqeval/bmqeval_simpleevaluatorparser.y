@@ -75,7 +75,7 @@
 %token PLUS "+" MINUS "-";
 %token TIMES "*" DIVIDES "/" MODULUS "%";
 %token EQ "=" NE "<>" LT "<" LE "<=" GE ">=" GT ">";
-%token EXISTS "exists";
+%token <bsl::string> EXISTS "exists";
 %token FORM1 "form1";
 %token FORM2 "form2";
 %token FORM3 "form3";
@@ -109,10 +109,14 @@ variable
             ++ctx.d_numProperties;
             $$ = $1;
         }
+    | EXISTS
+        {
+            ++ctx.d_numProperties;
+            $$ = $1;
+        }
 
 expression
     : variable {
-        
         #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) \
 && defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
             $$ = ctx.makeUnaryExpression<SimpleEvaluator::Property, bsl::string>(bsl::move($1));
@@ -120,6 +124,15 @@ expression
             $$ = ctx.makeUnaryExpression<SimpleEvaluator::Property, bsl::string>($1);
 #endif
     }
+    | EXISTS LPAR variable RPAR
+        {
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) \
+&& defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
+            $$ = ctx.makeUnaryExpression<SimpleEvaluator::Exists, bsl::string>(bsl::move($3));
+#else
+            $$ = ctx.makeUnaryExpression<SimpleEvaluator::Exists, bsl::string>($3);
+#endif
+        }
     | INTEGER
         { $$ = ctx.makeLiteral<SimpleEvaluator::IntegerLiteral>($1); }
     | OVERFLOW
@@ -151,15 +164,6 @@ expression
         { $$ = ctx.makeBooleanBinaryExpression<SimpleEvaluator::Or>($1, $3); }
     | NOT expression
         { $$ = ctx.makeUnaryExpression<SimpleEvaluator::Not>($2); }
-    | EXISTS LPAR variable RPAR
-        {
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) \
-&& defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-            $$ = ctx.makeUnaryExpression<SimpleEvaluator::Exists, bsl::string>(bsl::move($3));
-#else
-            $$ = ctx.makeUnaryExpression<SimpleEvaluator::Exists, bsl::string>($3);
-#endif
-        }
     | ABS LPAR expression RPAR
         { $$ = ctx.makeUnaryExpression<SimpleEvaluator::Abs>($3); }
     | FORM1 LPAR variable RPAR
