@@ -199,13 +199,12 @@ jobs:
             --log-file-level=info               \
             --bmq-tolerate-dirty-shutdown       \
             --bmq-log-dir=failure-logs          \
-            --bmq-keep-logs                      \
             --bmq-log-level=INFO                \
             --domain-consistency="${{ matrix.consistency }}" \
             --junitxml=integration-tests.xml    \
             --tb long                           \
             --reruns=3                          \
-            -n 4 -v
+            -n 4 -v -rA
       
       # logs may contain fileanmes with colon which it's not supported on NTFS filesystem
       # Thus creating an archive first
