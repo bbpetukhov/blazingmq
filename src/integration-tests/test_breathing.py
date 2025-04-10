@@ -658,7 +658,7 @@ def test_verify_partial_close(multi_node: Cluster, domain_urls: tc.DomainUrls):
     uri_fanout = domain_urls.uri_fanout
     proxies = multi_node.proxy_cycle()
 
-    proxy = next(proxies)
+    proxy = next(proxiesBad)
     proxy = next(proxies)
 
     producer1 = proxy.create_client("producer1")

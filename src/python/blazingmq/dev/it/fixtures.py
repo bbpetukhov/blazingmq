@@ -235,6 +235,7 @@ def cluster_fixture(request, configure) -> Iterator[Cluster]:
             failures = 0
 
             def remove_log_file_handler():
+                logger.error(f"failures={failures}, request.session.testsfailed={request.session.testsfailed}")
                 logging.getLogger().removeHandler(log_file_handler)
                 log_file_handler.close()
                 if failures == request.session.testsfailed and not get_option_ini(
