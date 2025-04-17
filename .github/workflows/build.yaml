@@ -84,31 +84,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/@v4
         with:
-          path: deps
-          key: ${{ needs.get_dependencies.outputs.cache_key }}
-
-      - name: Set up dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -qy build-essential \
-            gdb \
-            curl \
-            python3.10 \
-            python3-pip \
-            cmake \
-            ninja-build \
-            pkg-config \
-            bison \
-            libfl-dev \
-            libbenchmark-dev \
-            libgmock-dev \
-            libz-dev
-
-      - name: Install cached non packaged dependencies
-        working-directory: deps
-        run: ../docker/build_deps.sh
+          path: |
+            build/blazingmq
+            deps
+            /opt/bb/include
+          key: cache-${{ github.sha }}
 
       - name: Build BlazingMQ UTs
         env:
