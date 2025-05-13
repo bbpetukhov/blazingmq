@@ -2,11 +2,7 @@ name: Tests Manual
 
 on:
   workflow_dispatch:
-    inputs:
-      refit:
-        description: 'ITs Branch name, tag, or commit SHA'
-        required: true
-        default: 'main'
+    inputs:      
       ref1:
         description: 'Branch name, tag, or commit SHA #1'
         required: true
@@ -62,7 +58,7 @@ jobs:
       - name: Checkout ITs repo
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.refit }}
+          # The ref of the workflow that triggered this workflow
           path: repoit
           fetch-depth: 0
 
@@ -150,7 +146,7 @@ jobs:
       - name: Checkout ITs repo
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.refit }}
+          # The ref of the workflow that triggered this workflow
           path: repoit
           fetch-depth: 0
 
