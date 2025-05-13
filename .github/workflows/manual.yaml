@@ -3,6 +3,10 @@ name: Tests Manual
 on:
   workflow_dispatch:
     inputs:
+      refit:
+        description: 'ITs Branch name, tag, or commit SHA'
+        required: true
+        default: 'main'
       ref1:
         description: 'Branch name, tag, or commit SHA #1'
         required: true
@@ -10,7 +14,7 @@ on:
         description: 'Branch name, tag, or commit SHA #2'
         required: true
       leader_name:
-        description: 'Leader name for ITs (auto selected if empty)'
+        description: 'Leader Node Name for ITs (autoselected if empty)'
         required: false
         default: ''
 
@@ -55,6 +59,13 @@ jobs:
     env:
         RUN_UID: ${{ matrix.cluster }}_${{ matrix.mode }}_${{ matrix.consistency }}
     steps:
+      - name: Checkout ITs repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.refit }}
+          path: repoit
+          fetch-depth: 0
+
       - name: Checkout repo1
         uses: actions/checkout@v4
         with:
@@ -88,7 +99,7 @@ jobs:
         run: find ./build -type f -name "*.tsk" -exec chmod +x {} +
 
       - name: Run Integration Tests
-        working-directory: repo2
+        working-directory: repoit
         env:
           BLAZINGMQ_LEADER_NAME: "${{ github.event.inputs.leader_name }}"
 
@@ -117,7 +128,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.run_id }}_failure_logs_${{ env.RUN_UID }}
-          path: ${{ github.workspace }}/repo2/src/integration-tests/failure-logs
+          path: ${{ github.workspace }}/repoit/src/integration-tests/failure-logs
           retention-days: 5
 
 
@@ -136,6 +147,13 @@ jobs:
     env:
         RUN_UID: ${{ matrix.cluster }}_${{ matrix.mode }}_${{ matrix.consistency }}
     steps:
+      - name: Checkout ITs repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.refit }}
+          path: repoit
+          fetch-depth: 0
+
       - name: Checkout repo1
         uses: actions/checkout@v4
         with:
@@ -169,7 +187,7 @@ jobs:
         run: find ./build -type f -name "*.tsk" -exec chmod +x {} +
 
       - name: Run Integration Tests
-        working-directory: repo2
+        working-directory: repoit
         env:
           BLAZINGMQ_LEADER_NAME: "${{ github.event.inputs.leader_name }}"
 
@@ -201,5 +219,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.run_id }}_failure_logs_${{ env.RUN_UID }}
-          path: ${{ github.workspace }}/repo2/src/integration-tests/failure-logs
+          path: ${{ github.workspace }}/repoit/src/integration-tests/failure-logs
           retention-days: 5
