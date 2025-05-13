@@ -102,7 +102,7 @@ jobs:
 
           ./src/integration-tests/run-tests \
             "${{ matrix.mode }} and ${{ matrix.cluster }} and ${{ matrix.consistency }}" \
-            --log-level ERROR                   \
+            --log-level DEBUG                   \
             --log-file-level=info               \
             --bmq-tolerate-dirty-shutdown       \
             --bmq-log-dir=failure-logs          \
@@ -113,7 +113,7 @@ jobs:
             -n logical -v
 
       - name: Upload failure-logs as artifacts
-        if: failure()
+        # if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.run_id }}_failure_logs_${{ env.RUN_UID }}
@@ -186,7 +186,7 @@ jobs:
 
           ./src/integration-tests/run-tests \
             "${{ matrix.mode }} and ${{ matrix.cluster }} and ${{ matrix.consistency }}" \
-            --log-level ERROR                   \
+            --log-level DEBUG                   \
             --log-file-level=info               \
             --bmq-tolerate-dirty-shutdown       \
             --bmq-log-dir=failure-logs          \
@@ -197,7 +197,7 @@ jobs:
             -n logical -v
 
       - name: Upload failure-logs as artifacts
-        if: failure()
+        # if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.run_id }}_failure_logs_${{ env.RUN_UID }}
