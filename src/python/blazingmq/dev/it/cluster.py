@@ -697,9 +697,9 @@ class Cluster(contextlib.AbstractContextManager):
             os.environ[broker_path_var] = new_path
             self.deploy_broker_local(broker)
 
-            self._logger.debug(f"Updated {broker_path_var} to {new_path}")
+            self._logger.info(f"Updated {broker_path_var} to {new_path}")
         else:
-            self._logger.warning(
+            self._logger.info(
                 f"Skipped updating binary for broker {broker.name.upper()}. {newversion_path_var} is undefined"
             )
 
