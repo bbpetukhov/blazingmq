@@ -120,7 +120,7 @@ jobs:
             -n logical -v
 
       - name: Upload failure-logs as artifacts
-        # if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.run_id }}_failure_logs_${{ env.RUN_UID }}
@@ -212,7 +212,7 @@ jobs:
             -n logical -v
 
       - name: Upload failure-logs as artifacts
-        # if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.run_id }}_failure_logs_${{ env.RUN_UID }}
