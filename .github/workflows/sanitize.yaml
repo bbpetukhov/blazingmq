@@ -15,14 +15,14 @@ on:
           - msan
           - tsan
           - ubsan
-      # test_type:
-      #   description: 'Test Type'
-      #   required: true
-      #   default: 'unit'
-      #   type: choice
-      #   options:
-      #     - unit
-      #     - integration
+      test_type:
+        description: 'Test Type'
+        required: true
+        default: 'unit'
+        type: choice
+        options:
+          - unit
+          - integration
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -53,4 +53,8 @@ jobs:
           --no-cache --build-arg SANITIZER_NAME=${{ inputs.mode }} \
           -t sanitizer-${{ inputs.mode }} .
       - name: UT [c++,${{ inputs.mode }}]
-        run: docker run --rm sanitizer-${{ inputs.mode }}
+        if: ${{ inputs.test_type == 'unit' }}
+        run: docker run --rm sanitizer-${{ inputs.mode }} /blazingmq/cmake.bld/Linux/run-unittests.sh
+      - name: IT
+        if: ${{ inputs.test_type == 'integration' }}
+        run: docker run --rm sanitizer-${{ inputs.mode }} /blazingmq/cmake.bld/Linux/run-it.sh

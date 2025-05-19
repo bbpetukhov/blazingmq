@@ -30,217 +30,193 @@ fi
 
 SANITIZER_NAME="${1}"
 
-# Install prerequisites
-# Set up CA certificates first before installing other dependencies
-apt-get update && \
-apt-get install -y ca-certificates && \
-apt-get install -qy --no-install-recommends \
-    lsb-release \
-    wget \
-    software-properties-common \
-    gnupg \
-    git \
-    curl \
-    jq \
-    ninja-build \
-    bison \
-    libfl-dev \
-    pkg-config \
-    python3.12-venv \
-    && rm -rf /var/lib/apt/lists/*
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source  "$SCRIPT_DIR/build_sanitizer_common.sh"
 
-# Create Python venv
-python3 -m venv venv
+# # Install prerequisites
+# # Set up CA certificates first before installing other dependencies
+# apt-get update && \
+# apt-get install -y ca-certificates && \
+# apt-get install -qy --no-install-recommends \
+#     lsb-release \
+#     wget \
+#     software-properties-common \
+#     gnupg \
+#     git \
+#     curl \
+#     jq \
+#     ninja-build \
+#     bison \
+#     libfl-dev \
+#     pkg-config \
+#     python3.12-venv \
+#     && rm -rf /var/lib/apt/lists/*
 
-# Install prerequisites for LLVM: latest cmake version, Ubuntu apt repository contains stale version
-wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null \
-        | gpg --dearmor - \
-        | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
-apt-add-repository -y "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
-apt-get install -qy cmake
+# # Install prerequisites for LLVM: latest cmake version, Ubuntu apt repository contains stale version
+# wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null \
+#         | gpg --dearmor - \
+#         | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+# apt-add-repository -y "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+# apt-get install -qy cmake
 
-# Install LLVM
-wget https://apt.llvm.org/llvm.sh
-chmod +x llvm.sh 
-LLVM_VERSION=18
-LLVM_TAG="llvmorg-18.1.8"
-./llvm.sh ${LLVM_VERSION} all
+# # Install LLVM
+# wget https://apt.llvm.org/llvm.sh
+# chmod +x llvm.sh 
+# LLVM_VERSION=18
+# LLVM_TAG="llvmorg-18.1.8"
+# ./llvm.sh ${LLVM_VERSION} all
 
-# Create version-agnostic pointers to required LLVM binaries.
-ln -sf /usr/bin/clang-${LLVM_VERSION} /usr/bin/clang
-ln -sf /usr/bin/clang++-${LLVM_VERSION} /usr/bin/clang++ 
-ln -sf /usr/bin/llvm-symbolizer-${LLVM_VERSION} /usr/bin/llvm-symbolizer
+# # Create version-agnostic pointers to required LLVM binaries.
+# ln -sf /usr/bin/clang-${LLVM_VERSION} /usr/bin/clang
+# ln -sf /usr/bin/clang++-${LLVM_VERSION} /usr/bin/clang++ 
+# ln -sf /usr/bin/llvm-symbolizer-${LLVM_VERSION} /usr/bin/llvm-symbolizer
 
-# Set some initial constants
-PARALLELISM=8
+# LLVM_SANITIZER_NAME="$(cfgquery ."${SANITIZER_NAME}".llvm_sanitizer_name)"
+# # Check if llvm specific cmake options are present for the given sanitizer
+# LLVM_SPECIFIC_CMAKE_OPTIONS="$(cfgquery ."${SANITIZER_NAME}".llvm_specific_cmake_options)"
+# if [[ "$LLVM_SPECIFIC_CMAKE_OPTIONS" == null ]]; then LLVM_SPECIFIC_CMAKE_OPTIONS=""; fi
 
-DIR_ROOT="${PWD}"
-DIR_SCRIPTS="${DIR_ROOT}/docker/sanitizers"
-DIR_EXTERNAL="${DIR_ROOT}/deps"
-DIR_SRCS_EXT="${DIR_EXTERNAL}/srcs"
-DIR_BUILD_EXT="${DIR_EXTERNAL}/cmake.bld"
+# checkoutGitRepo() {
+#     local repo=$1
+#     local ref=$2
+#     local repoDir=$3
+#     echo "Checking out ${repo} at ${ref}"
 
-DIR_SRC_BMQ="${DIR_ROOT}"
-DIR_BUILD_BMQ="${DIR_SRC_BMQ}/cmake.bld/Linux"
+#     local repoPath="${DIR_SRCS_EXT}/${repoDir}"
 
-# Parse sanitizers config
-cfgquery() {
-    jq "${1}" "${DIR_SCRIPTS}/sanitizers.json" --raw-output
-}
-LLVM_SANITIZER_NAME="$(cfgquery ."${SANITIZER_NAME}".llvm_sanitizer_name)"
-# Check if llvm specific cmake options are present for the given sanitizer
-LLVM_SPECIFIC_CMAKE_OPTIONS="$(cfgquery ."${SANITIZER_NAME}".llvm_specific_cmake_options)"
-if [[ "$LLVM_SPECIFIC_CMAKE_OPTIONS" == null ]]; then LLVM_SPECIFIC_CMAKE_OPTIONS=""; fi
+#     git clone -b "${ref}" "${repo}" \
+#         --depth 1 --single-branch --no-tags -c advice.detachedHead=false "${repoPath}"
+# }
+# github_url() { echo "https://github.com/$1.git"; }
 
-checkoutGitRepo() {
-    local repo=$1
-    local ref=$2
-    local repoDir=$3
-    echo "Checking out ${repo} at ${ref}"
+# # Download external dependencies
+# mkdir -p "${DIR_SRCS_EXT}"
 
-    local repoPath="${DIR_SRCS_EXT}/${repoDir}"
+# # Download LLVM sources
+# curl -SL "https://github.com/llvm/llvm-project/archive/refs/tags/${LLVM_TAG}.tar.gz" \
+#     | tar -xzC "${DIR_SRCS_EXT}"
+# mv "${DIR_SRCS_EXT}/llvm-project-${LLVM_TAG}" "${DIR_SRCS_EXT}/llvm-project"
 
-    git clone -b "${ref}" "${repo}" \
-        --depth 1 --single-branch --no-tags -c advice.detachedHead=false "${repoPath}"
-}
-github_url() { echo "https://github.com/$1.git"; }
+# # Download google-benchmark sources
+# GOOGLE_BENCHMARK_TAG="v1.9.1"
+# checkoutGitRepo "$(github_url google/benchmark)" "${GOOGLE_BENCHMARK_TAG}" "google-benchmark"
 
-# Download external dependencies
-mkdir -p "${DIR_SRCS_EXT}"
+# # Download googletest sources
+# GOOGLETEST_TAG="v1.15.2"
+# checkoutGitRepo "$(github_url google/googletest)" "${GOOGLETEST_TAG}" "googletest"
 
-# Download LLVM sources
-curl -SL "https://github.com/llvm/llvm-project/archive/refs/tags/${LLVM_TAG}.tar.gz" \
-    | tar -xzC "${DIR_SRCS_EXT}"
-mv "${DIR_SRCS_EXT}/llvm-project-${LLVM_TAG}" "${DIR_SRCS_EXT}/llvm-project"
+# # Download zlib
+# ZLIB_TAG="v1.3.1"
+# checkoutGitRepo "$(github_url madler/zlib)" "${ZLIB_TAG}" "zlib"
 
-# Download google-benchmark sources
-GOOGLE_BENCHMARK_TAG="v1.9.1"
-checkoutGitRepo "$(github_url google/benchmark)" "${GOOGLE_BENCHMARK_TAG}" "google-benchmark"
+# # Download bde-tools, bde and ntf-core sources
+# cd "${DIR_EXTERNAL}"
+# "${DIR_ROOT}"/docker/build_deps.sh "--only-download"
+# cd -
 
-# Download googletest sources
-GOOGLETEST_TAG="v1.15.2"
-checkoutGitRepo "$(github_url google/googletest)" "${GOOGLETEST_TAG}" "googletest"
+# # Build libc++ with required instrumentation
+# #
+# # The extent to which all dependencies to be compiled with sanitizer-support
+# # varies by sanitizer. MemorySanitizer is especially unforgiving: Failing to
+# # link against an instrumented standard library will yield many false
+# # positives.  Concensus is that compiling libc++ with `-fsanitize=memory` is a
+# # significantly easier endeavor than doing the same with libstdc++ (the gcc
+# # standard library).
+# #
+# # We therefore opt to use libc++ here, just to ensure maximum flexibility.  We
+# # follow build instructions from https://libcxx.llvm.org/BuildingLibcxx.html
+# LIBCXX_SRC_PATH="${DIR_SRCS_EXT}/llvm-project/runtimes"
+# LIBCXX_BUILD_PATH="${LIBCXX_SRC_PATH}/cmake.bld"
 
-# Download zlib
-ZLIB_TAG="v1.3.1"
-checkoutGitRepo "$(github_url madler/zlib)" "${ZLIB_TAG}" "zlib"
+# cmake   -B "${LIBCXX_BUILD_PATH}" \
+#         -S "${LIBCXX_SRC_PATH}" \
+#         -DCMAKE_BUILD_TYPE="Debug" \
+#         -DCMAKE_C_COMPILER="clang" \
+#         -DCMAKE_CXX_COMPILER="clang++" \
+#         -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" \
+#         -DLLVM_USE_SANITIZER="${LLVM_SANITIZER_NAME}" \
+#         "${LLVM_SPECIFIC_CMAKE_OPTIONS}"
 
-# Download bde-tools, bde and ntf-core sources
-cd "${DIR_EXTERNAL}"
-"${DIR_ROOT}"/docker/build_deps.sh "--only-download"
-cd -
+# cmake --build "${LIBCXX_BUILD_PATH}" -j${PARALLELISM} --target cxx cxxabi unwind generate-cxx-headers
 
-# Build libc++ with required instrumentation
-#
-# The extent to which all dependencies to be compiled with sanitizer-support
-# varies by sanitizer. MemorySanitizer is especially unforgiving: Failing to
-# link against an instrumented standard library will yield many false
-# positives.  Concensus is that compiling libc++ with `-fsanitize=memory` is a
-# significantly easier endeavor than doing the same with libstdc++ (the gcc
-# standard library).
-#
-# We therefore opt to use libc++ here, just to ensure maximum flexibility.  We
-# follow build instructions from https://libcxx.llvm.org/BuildingLibcxx.html
-LIBCXX_SRC_PATH="${DIR_SRCS_EXT}/llvm-project/runtimes"
-LIBCXX_BUILD_PATH="${LIBCXX_SRC_PATH}/cmake.bld"
+# # Variables read by our custom CMake toolchain used to build everything else.
+# export LIBCXX_BUILD_PATH="${LIBCXX_BUILD_PATH}"
+# export DIR_SRC_BMQ="${DIR_SRC_BMQ}"
+# export DIR_SCRIPTS="${DIR_SCRIPTS}"
 
-cmake   -B "${LIBCXX_BUILD_PATH}" \
-        -S "${LIBCXX_SRC_PATH}" \
-        -DCMAKE_BUILD_TYPE="Debug" \
-        -DCMAKE_C_COMPILER="clang" \
-        -DCMAKE_CXX_COMPILER="clang++" \
-        -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" \
-        -DLLVM_USE_SANITIZER="${LLVM_SANITIZER_NAME}" \
-        "${LLVM_SPECIFIC_CMAKE_OPTIONS}"
+# TOOLCHAIN_PATH="${DIR_SCRIPTS}/clang-libcxx-sanitizer.cmake"
+# export SANITIZER_NAME="${SANITIZER_NAME}"
+# export CC="clang"
+# export CXX="clang++"
+# export CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES="/usr/include;/usr/include/clang/${LLVM_VERSION}/include"
+# export BBS_BUILD_SYSTEM="ON"
+# PATH="$PATH:$(realpath "${DIR_SRCS_EXT}"/bde-tools/bin)"
+# export PATH
 
-cmake --build "${LIBCXX_BUILD_PATH}" -j${PARALLELISM} --target cxx cxxabi unwind generate-cxx-headers
+# # Build BDE + NTF
+# pushd "${DIR_SRCS_EXT}/bde"
+# eval "$(bbs_build_env -u dbg_64_safe_cpp20 -b "${DIR_BUILD_EXT}/bde")"
+# bbs_build configure --toolchain "${TOOLCHAIN_PATH}"
+# bbs_build build -j${PARALLELISM}
+# bbs_build --install=/opt/bb --prefix=/ install
+# popd
 
-# Variables read by our custom CMake toolchain used to build everything else.
-export LIBCXX_BUILD_PATH="${LIBCXX_BUILD_PATH}"
-export DIR_SRC_BMQ="${DIR_SRC_BMQ}"
-export DIR_SCRIPTS="${DIR_SCRIPTS}"
+# pushd "${DIR_SRCS_EXT}/ntf-core"
+# # TODO The deprecated flag "-fcoroutines-ts" has been removed in clang
+# # 17.0.1, but NTF is still using it.  We manually change this flag until
+# # the fix in issue 175307231 is resolved.
+# sed -i 's/fcoroutines-ts/fcoroutines/g' 'repository.cmake'
 
-TOOLCHAIN_PATH="${DIR_SCRIPTS}/clang-libcxx-sanitizer.cmake"
-export SANITIZER_NAME="${SANITIZER_NAME}"
-export CC="clang"
-export CXX="clang++"
-export CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES="/usr/include;/usr/include/clang/${LLVM_VERSION}/include"
-export BBS_BUILD_SYSTEM="ON"
-PATH="$PATH:$(realpath "${DIR_SRCS_EXT}"/bde-tools/bin)"
-export PATH
+# ./configure --keep \
+#             --prefix /opt/bb             \
+#             --output "${DIR_BUILD_EXT}/ntf" \
+#             --without-warnings-as-errors \
+#             --without-usage-examples \
+#             --without-applications \
+#             --ufid 'dbg_64_safe_cpp20' \
+#             --toolchain "${TOOLCHAIN_PATH}"
+# make -j${PARALLELISM}
+# make install
+# popd
 
-# Build BDE + NTF
-pushd "${DIR_SRCS_EXT}/bde"
-eval "$(bbs_build_env -u dbg_64_safe_cpp20 -b "${DIR_BUILD_EXT}/bde")"
-bbs_build configure --toolchain "${TOOLCHAIN_PATH}"
-bbs_build build -j${PARALLELISM}
-bbs_build --install=/opt/bb --prefix=/ install
-popd
+# # Note: Hack to circumvent faulty behavior in "nts-targets.cmake"
+# ln -sf "/opt/bb/include" "/opt/include"
+# ln -sf "/opt/bb/lib64" "/opt/lib64"
 
-pushd "${DIR_SRCS_EXT}/ntf-core"
-# TODO The deprecated flag "-fcoroutines-ts" has been removed in clang
-# 17.0.1, but NTF is still using it.  We manually change this flag until
-# the fix in issue 175307231 is resolved.
-sed -i 's/fcoroutines-ts/fcoroutines/g' 'repository.cmake'
+# # Build GoogleTest
+# cmake -B "${DIR_SRCS_EXT}/googletest/cmake.bld" \
+#       -S "${DIR_SRCS_EXT}/googletest" "${CMAKE_OPTIONS[@]}" \
+#       -DCMAKE_INSTALL_PREFIX=/opt/bb
+# cmake --build "${DIR_SRCS_EXT}/googletest/cmake.bld" -j${PARALLELISM}
+# cmake --install "${DIR_SRCS_EXT}/googletest/cmake.bld" --prefix "/opt/bb"
 
-./configure --keep \
-            --prefix /opt/bb             \
-            --output "${DIR_BUILD_EXT}/ntf" \
-            --without-warnings-as-errors \
-            --without-usage-examples \
-            --without-applications \
-            --ufid 'dbg_64_safe_cpp20' \
-            --toolchain "${TOOLCHAIN_PATH}"
-make -j${PARALLELISM}
-make install
-popd
+# # Build Google Benchmark
+# cmake -B "${DIR_SRCS_EXT}/google-benchmark/cmake.bld" \
+#         -S "${DIR_SRCS_EXT}/google-benchmark" "${CMAKE_OPTIONS[@]}" \
+#         -DCMAKE_INSTALL_PREFIX=/opt/bb \
+#         -DBENCHMARK_DOWNLOAD_DEPENDENCIES="ON" \
+#         -DBENCHMARK_ENABLE_GTEST_TESTS="false" \
+#         -DHAVE_STD_REGEX="ON" \
+#         -DBENCHMARK_ENABLE_TESTING="OFF"
+# cmake --build "${DIR_SRCS_EXT}/google-benchmark/cmake.bld" -j${PARALLELISM}
+# cmake --install "${DIR_SRCS_EXT}/google-benchmark/cmake.bld" --prefix "/opt/bb"
 
-# Note: Hack to circumvent faulty behavior in "nts-targets.cmake"
-ln -sf "/opt/bb/include" "/opt/include"
-ln -sf "/opt/bb/lib64" "/opt/lib64"
+# # Build zlib
+# # Note: zlib has completely broken CMake install rules, so we must
+# # specify the install prefix *exactly* as it will be at configure
+# # time
+# # https://discourse.cmake.org/t/cmake-install-prefix-not-work/5040
+# cmake -B "${DIR_SRCS_EXT}/zlib/cmake.bld" -S "${DIR_SRCS_EXT}/zlib" \
+#         -D CMAKE_INSTALL_PREFIX="/opt/bb" \
+#         "${CMAKE_OPTIONS[@]}"
+# # Make and install zlib.
+# cmake --build "${DIR_SRCS_EXT}/zlib/cmake.bld" -j${PARALLELISM}
+# cmake --install "${DIR_SRCS_EXT}/zlib/cmake.bld"
 
-# Setup CMake options for all remaining builds
-CMAKE_OPTIONS=( \
-    -D BUILD_BITNESS=64 \
-    -D CMAKE_BUILD_TYPE=Debug \
-    -D CMAKE_INSTALL_INCLUDEDIR=include \
-    -D CMAKE_INSTALL_LIBDIR=lib64 \
-    -D CMAKE_TOOLCHAIN_FILE="${TOOLCHAIN_PATH}")
-
-# Build GoogleTest
-cmake -B "${DIR_SRCS_EXT}/googletest/cmake.bld" \
-      -S "${DIR_SRCS_EXT}/googletest" "${CMAKE_OPTIONS[@]}" \
-      -DCMAKE_INSTALL_PREFIX=/opt/bb
-cmake --build "${DIR_SRCS_EXT}/googletest/cmake.bld" -j${PARALLELISM}
-cmake --install "${DIR_SRCS_EXT}/googletest/cmake.bld" --prefix "/opt/bb"
-
-# Build Google Benchmark
-cmake -B "${DIR_SRCS_EXT}/google-benchmark/cmake.bld" \
-        -S "${DIR_SRCS_EXT}/google-benchmark" "${CMAKE_OPTIONS[@]}" \
-        -DCMAKE_INSTALL_PREFIX=/opt/bb \
-        -DBENCHMARK_DOWNLOAD_DEPENDENCIES="ON" \
-        -DBENCHMARK_ENABLE_GTEST_TESTS="false" \
-        -DHAVE_STD_REGEX="ON" \
-        -DBENCHMARK_ENABLE_TESTING="OFF"
-cmake --build "${DIR_SRCS_EXT}/google-benchmark/cmake.bld" -j${PARALLELISM}
-cmake --install "${DIR_SRCS_EXT}/google-benchmark/cmake.bld" --prefix "/opt/bb"
-
-# Build zlib
-# Note: zlib has completely broken CMake install rules, so we must
-# specify the install prefix *exactly* as it will be at configure
-# time
-# https://discourse.cmake.org/t/cmake-install-prefix-not-work/5040
-cmake -B "${DIR_SRCS_EXT}/zlib/cmake.bld" -S "${DIR_SRCS_EXT}/zlib" \
-        -D CMAKE_INSTALL_PREFIX="/opt/bb" \
-        "${CMAKE_OPTIONS[@]}"
-# Make and install zlib.
-cmake --build "${DIR_SRCS_EXT}/zlib/cmake.bld" -j${PARALLELISM}
-cmake --install "${DIR_SRCS_EXT}/zlib/cmake.bld"
-
-# Remove un-needed folders
-rm -rf "${DIR_BUILD_EXT}"
-rm -rf "${DIR_SRCS_EXT}/bde"
-rm -rf "${DIR_SRCS_EXT}/ntf-core"
+# # Remove un-needed folders
+# rm -rf "${DIR_BUILD_EXT}"
+# rm -rf "${DIR_SRCS_EXT}/bde"
+# rm -rf "${DIR_SRCS_EXT}/ntf-core"
 
 # Build BlazingMQ
 PKG_CONFIG_PATH="/opt/bb/lib64/pkgconfig:/opt/bb/lib/pkgconfig:/opt/bb/share/pkgconfig:$(pkg-config --variable pc_path pkg-config)" \
@@ -250,7 +226,7 @@ cmake -B "${DIR_BUILD_BMQ}" -S "${DIR_SRC_BMQ}" -G Ninja \
     -DCMAKE_PREFIX_PATH="${DIR_SRCS_EXT}/bde-tools/BdeBuildSystem" \
     -DBDE_BUILD_TARGET_SAFE=1 "${CMAKE_OPTIONS[@]}"
 cmake --build "${DIR_BUILD_BMQ}" -j${PARALLELISM} \
-      --target all -v --clean-first
+      --target bmqbrkr bmqtool -v --clean-first
 
 # Create testing script
 envcfgquery() {
@@ -293,9 +269,15 @@ CMD="cd $(realpath "${DIR_BUILD_BMQ}") && "
 CMD+="./run-env.sh ctest --output-on-failure"
 mkscript "${CMD}" "${DIR_BUILD_BMQ}/run-unittests.sh"
 
+# Create Python venv
+python3 -m venv venv
+source venv/bin/activate
+pip install -r "${DIR_SRC_BMQ}/src/python/requirements.txt"
 
-# 'run-it.sh' runs instrumented integration tests.
+# run-it.sh runs instrumented integration tests.
 CMD="cd $(realpath ${DIR_SRC_BMQ}) && "
 CMD+="source ./venv/bin/activate && "
-CMD+="${DIR_BUILD_BMQ}/run-env.sh ./src/integration-tests/run-tests 'fsm_mode and single and strong_consistency' -v"
+CMD+="BLAZINGMQ_TOOL=${DIR_BUILD_BMQ}/src/applications/bmqtool/bmqtool.tsk "
+CMD+="BLAZINGMQ_BROKER=${DIR_BUILD_BMQ}/src/applications/bmqbrkr/bmqbrkr.tsk "
+CMD+="${DIR_BUILD_BMQ}/run-env.sh ./src/integration-tests/run-tests -v"
 mkscript "${CMD}" "${DIR_BUILD_BMQ}/run-it.sh"

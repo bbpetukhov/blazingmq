@@ -17,9 +17,5 @@ COPY src src
 COPY CMakeLists.txt ./
 
 # Build with sanitizer instrumentation
+RUN docker/sanitizers/build_sanitizer_deps.sh ${SANITIZER_NAME}
 RUN docker/sanitizers/build_sanitizer.sh ${SANITIZER_NAME}
-
-# Run unit tests
-# CMD [ "/blazingmq/cmake.bld/Linux/run-unittests.sh" ]
-CMD [ "/blazingmq/cmake.bld/Linux/run-it.sh" ]
-
