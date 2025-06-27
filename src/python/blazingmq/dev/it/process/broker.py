@@ -41,7 +41,8 @@ import blazingmq.dev.configurator.configurator as cfg
 
 from blazingmq.dev.it.util import internal_use, ListContextManager, Queue
 
-BLOCK_TIMEOUT = 60
+START_TIMEOUT = 30
+BLOCK_TIMEOUT = 15
 
 
 def open_non_blocking(path, flags):
@@ -112,7 +113,7 @@ class Broker(blazingmq.dev.it.process.bmqproc.BMQProcess):
         Wait until the broker has started.
         """
         with internal_use(self):
-            if not self.outputs_substr("BMQbrkr started successfully", timeout=120):
+            if not self.outputs_substr("BMQbrkr started successfully", timeout=START_TIMEOUT):
                 raise RuntimeError(f"Failed to start broker on {self.name}: timeout")
 
         with (self._cwd / "bmqbrkr.pid").open("r") as file:

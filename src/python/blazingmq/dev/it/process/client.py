@@ -43,7 +43,7 @@ class CommandResult(NamedTuple):
     matches: Optional[List[Optional[re.Match]]]
 
 
-blocktimeout = 15
+blocktimeout = 3
 
 
 class ITError(Exception):
