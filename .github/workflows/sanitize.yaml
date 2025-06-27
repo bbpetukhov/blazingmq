@@ -38,3 +38,5 @@ jobs:
           -t sanitizer-${{ matrix.mode }} .
       - name: UT [c++,${{ matrix.mode }}]
         run: docker run --rm sanitizer-${{ matrix.mode }}
+      - name: IT [c++,${{ matrix.mode }}]
+        run: docker run --rm sanitizer-${{ matrix.mode }}  /blazingmq/cmake.bld/Linux/run-it.sh
