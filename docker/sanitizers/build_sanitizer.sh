@@ -301,9 +301,7 @@ CMD+="./run-env.sh ctest --output-on-failure"
 mkscript "${CMD}" "${DIR_BUILD_BMQ}/run-unittests.sh"
 
 # 'run-it.sh' runs instrumented integration tests.
-CMD="cd $(realpath "${DIR_BUILD_BMQ}") && "
-CMD+="source ./venv/bin/activate && "
+CMD="source ./venv/bin/activate && "
 CMD+="BLAZINGMQ_BUILD_DIR=${DIR_BUILD_BMQ} "
-CMD+="BLAZINGMQ_IT_PRESET=\"fsm_mode and strong_consistency\" "
 CMD+="${DIR_BUILD_BMQ}/run-env.sh ./src/integration-tests/run-tests -v \$@"
 mkscript "${CMD}" "${DIR_BUILD_BMQ}/run-it.sh"
