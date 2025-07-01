@@ -1,6 +1,9 @@
 name: Sanitize
 
 on:
+  push:
+    branches:
+      - sanitize-it
   pull_request_review:
     types: [submitted]
   workflow_dispatch:
@@ -17,10 +20,10 @@ jobs:
         mode: ["asan", "msan", "tsan", "ubsan"]
       fail-fast: false
     runs-on: ubuntu-24.04
-    if: github.event.review.state == 'APPROVED' || github.event_name == 'workflow_dispatch'
+    # if: github.event.review.state == 'APPROVED' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
-      - name : Purge runner
+      - name: Purge runner
       # Strip the runner to avoid space quota exceeding
         run: |
           sudo apt-get purge -y \
@@ -39,4 +42,4 @@ jobs:
       - name: UT [c++,${{ matrix.mode }}]
         run: docker run --rm sanitizer-${{ matrix.mode }}
       - name: IT [c++,${{ matrix.mode }}]
-        run: docker run --rm sanitizer-${{ matrix.mode }}  /blazingmq/cmake.bld/Linux/run-it.sh
+        run: docker run --rm sanitizer-${{ matrix.mode }} /blazingmq/cmake.bld/Linux/run-it.sh
