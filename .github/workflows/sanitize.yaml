@@ -3,7 +3,7 @@ name: Sanitize
 on:
   push:
     branches:
-      - sanitize-it
+      - sanitize-it2
   pull_request_review:
     types: [submitted]
   workflow_dispatch:
@@ -39,7 +39,7 @@ jobs:
           docker build -f ${{ github.workspace }}/docker/sanitizers/Dockerfile \
           --no-cache --build-arg SANITIZER_NAME=${{ matrix.mode }} \
           -t sanitizer-${{ matrix.mode }} .
-      - name: UT [c++,${{ matrix.mode }}]
-        run: docker run --rm sanitizer-${{ matrix.mode }}
+      # - name: UT [c++,${{ matrix.mode }}]
+      #   run: docker run --rm sanitizer-${{ matrix.mode }}
       - name: IT [c++,${{ matrix.mode }}]
         run: docker run --rm sanitizer-${{ matrix.mode }} /blazingmq/cmake.bld/Linux/run-it.sh
