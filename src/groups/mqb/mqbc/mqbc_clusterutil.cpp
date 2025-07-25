@@ -1066,6 +1066,7 @@ void ClusterUtil::registerQueueInfo(ClusterState*        clusterState,
     // executed by the cluster *DISPATCHER* thread
 
     // PRECONDITIONS
+    BSLS_ASSERT_SAFE(cluster);
     BSLS_ASSERT_SAFE(cluster->dispatcher()->inDispatcherThread(cluster));
     BSLS_ASSERT_SAFE(!cluster->isRemote());
     BSLS_ASSERT_SAFE(clusterState);
@@ -1128,6 +1129,16 @@ void ClusterUtil::registerQueueInfo(ClusterState*        clusterState,
                     << "].  PartitionId/QueueKey/AppInfos in storage ["
                     << partitionId << "], [" << queueKey << "], ["
                     << storageAppInfos << "]." << BMQTSK_ALARMLOG_END;
+
+                if (!cluster->isFSMWorkflow()) {
+                    // TODO (FSM); remove this code after switching to FSM
+
+                    // Cache and wait for primary to unregister the queue from
+                    // 'partitionId'
+
+                    clusterState->cacheDoubleAssignment(uri, partitionId);
+                }
+
                 return;  // RETURN
             }
 
@@ -1202,14 +1213,15 @@ void ClusterUtil::populateAppInfos(
     }
 }
 
-void ClusterUtil::updateAppIds(ClusterData*                    clusterData,
-                               ClusterStateLedger*             ledger,
-                               ClusterState&                   clusterState,
-                               const bsl::vector<bsl::string>& added,
-                               const bsl::vector<bsl::string>& removed,
-                               const bsl::string&              domainName,
-                               const bsl::string&              uri,
-                               bslma::Allocator*               allocator)
+mqbi::ClusterErrorCode::Enum
+ClusterUtil::updateAppIds(ClusterData*                    clusterData,
+                          ClusterStateLedger*             ledger,
+                          ClusterState&                   clusterState,
+                          const bsl::vector<bsl::string>& added,
+                          const bsl::vector<bsl::string>& removed,
+                          const bsl::string&              domainName,
+                          const bsl::string&              uri,
+                          bslma::Allocator*               allocator)
 {
     // PRECONDITIONS
     BSLS_ASSERT_SAFE(clusterData);
@@ -1227,7 +1239,7 @@ void ClusterUtil::updateAppIds(ClusterData*                    clusterData,
                       << " and registering appIds " << printAdded
                       << "] for domain '" << domainName
                       << "'. Self is not leader.";
-        return;  // RETURN
+        return mqbi::ClusterErrorCode::e_NOT_LEADER;  // RETURN
     }
 
     if (ElectorInfoLeaderStatus::e_ACTIVE !=
@@ -1237,7 +1249,7 @@ void ClusterUtil::updateAppIds(ClusterData*                    clusterData,
                        << " and to register appIds " << printAdded
                        << "] for domain '" << domainName
                        << "'. Self is leader but is not active.";
-        return;  // RETURN
+        return mqbi::ClusterErrorCode::e_NOT_LEADER;  // RETURN
     }
 
     if (clusterData->membership().selfNodeStatus() ==
@@ -1247,7 +1259,7 @@ void ClusterUtil::updateAppIds(ClusterData*                    clusterData,
                        << " and to register appIds " << printAdded
                        << "] for domain '" << domainName
                        << "'. Self is active leader but is stopping.";
-        return;  // RETURN
+        return mqbi::ClusterErrorCode::e_STOPPING;  // RETURN
     }
 
     // Populate 'queueUpdateAdvisory'
@@ -1314,7 +1326,7 @@ void ClusterUtil::updateAppIds(ClusterData*                    clusterData,
                                << printAdded << " for '" << uri
                                << "'.  Current state: " << *qinfoCit->second;
 
-                return;  // RETURN
+                return mqbi::ClusterErrorCode::e_UNKNOWN;  // RETURN
             }
         }
     }
@@ -1327,7 +1339,7 @@ void ClusterUtil::updateAppIds(ClusterData*                    clusterData,
                            << " and to register appIds " << printAdded
                            << "]. Queue '" << uri << "' does not exist.";
 
-            return;  // RETURN
+            return mqbi::ClusterErrorCode::e_UNKNOWN_QUEUE;  // RETURN
         }
 
         const bool success = populateQueueUpdate(&queueAdvisory,
@@ -1341,7 +1353,7 @@ void ClusterUtil::updateAppIds(ClusterData*                    clusterData,
                            << " for '" << uri
                            << "'.  Current state: " << *qinfoCit->second;
 
-            return;  // RETURN
+            return mqbi::ClusterErrorCode::e_UNKNOWN;  // RETURN
         }
     }
 
@@ -1355,6 +1367,8 @@ void ClusterUtil::updateAppIds(ClusterData*                    clusterData,
         BALL_LOG_ERROR << clusterData->identity().description()
                        << ": Failed to apply queue update advisory: "
                        << queueAdvisory << ", rc: " << rc;
+
+        return mqbi::ClusterErrorCode::e_CSL_FAILURE;
     }
     else {
         BALL_LOG_INFO_BLOCK
@@ -1369,17 +1383,18 @@ void ClusterUtil::updateAppIds(ClusterData*                    clusterData,
                 BALL_LOG_OUTPUT_STREAM << "uri = [" << uri << "]";
             }
         }
+
+        return mqbi::ClusterErrorCode::e_OK;
     }
 }
 
 void ClusterUtil::sendClusterState(
-    ClusterData*          clusterData,
-    ClusterStateLedger*   ledger,
-    mqbi::StorageManager* storageManager,
-    const ClusterState&   clusterState,
-    bool                  sendPartitionPrimaryInfo,
-    bool                  sendQueuesInfo,
-    mqbnet::ClusterNode*  node,
+    ClusterData*         clusterData,
+    ClusterStateLedger*  ledger,
+    const ClusterState&  clusterState,
+    bool                 sendPartitionPrimaryInfo,
+    bool                 sendQueuesInfo,
+    mqbnet::ClusterNode* node,
     const bsl::vector<bmqp_ctrlmsg::PartitionPrimaryInfo>& partitions)
 {
     // executed by the cluster *DISPATCHER* thread

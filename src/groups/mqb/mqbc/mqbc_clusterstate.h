@@ -526,6 +526,12 @@ class ClusterState {
     typedef bsl::unordered_set<ClusterStateObserver*> ObserversSet;
     typedef ObserversSet::iterator                    ObserversSetIter;
 
+    /// TODO (FSM); remove after switching to FSM
+    typedef bsl::function<void(const bmqt::Uri& uri, int partitionId)>
+        AssignmentVisitor;
+    typedef bsl::unordered_map<int, bsl::unordered_set<bmqt::Uri> >
+        Assignments;
+
   private:
     // DATA
 
@@ -549,6 +555,9 @@ class ClusterState {
 
     /// Regexp wrapper used to get partition Id.
     PartitionIdExtractor d_partitionIdExtractor;
+
+    /// TODO (FSM); remove after switching to FSM
+    Assignments d_doubleAssignments;
 
   public:
     // TRAITS
@@ -624,12 +633,10 @@ class ClusterState {
     /// Assign the queue with the values (such as `uri`, `key`, `partitionId`)
     /// from the specified `queueInfo`, and register the `appIdInfos` from the
     /// `queueInfo` to the queue.
-    /// If the queue already appears in cluster state, return false.  Else,
-    /// return true.
     ///
     /// THREAD: This method should only be called from the associated
     /// cluster's dispatcher thread.
-    bool assignQueue(const bmqp_ctrlmsg::QueueInfo& queueInfo);
+    void assignQueue(const bmqp_ctrlmsg::QueueInfo& queueInfo);
 
     /// Un-assign the queue with the specified `uri`.  Return true if
     /// successful, or false if the queue does not exist.
@@ -657,6 +664,11 @@ class ClusterState {
 
     /// Clear this cluster state object, without firing any observers.
     void clear();
+
+    /// TODO (FSM); remove after switching to FSM
+    bool cacheDoubleAssignment(const bmqt::Uri& uri, int partitionId);
+
+    void iterateDoubleAssignments(int partitionId, AssignmentVisitor& visitor);
 
     // ACCESSORS
     const mqbi::Cluster*  cluster() const;
@@ -720,6 +732,11 @@ class ClusterState {
     /// otherwise.
     ClusterStateQueueInfo*
     getAssignedOrUnassigning(const bmqt::Uri& uri) const;
+
+    /// TODO (FSM); remove after switching to FSM
+    void iterateDoubleAssignments(
+        const Assignments::const_iterator& partitionAssignments,
+        AssignmentVisitor&                 visitor) const;
 };
 
 // ============================================================================
@@ -965,6 +982,7 @@ inline ClusterState::ClusterState(mqbi::Cluster*    cluster,
 , d_queueKeys(allocator)
 , d_observers(allocator)
 , d_partitionIdExtractor(allocator)
+, d_doubleAssignments(allocator)
 {
     // PRECONDITIONS
     BSLS_ASSERT_SAFE(d_cluster_p);
