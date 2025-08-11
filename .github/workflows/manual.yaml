@@ -15,11 +15,11 @@ on:
       ref2:
         description: 'Branch name, tag, or commit SHA #2'
         required: true
-      test_mode:
-        description: "Mode"
-        required: true
-        default: "-k breathing"
-        # The test_mode input allows you to specify which tests to run
+      test_filter:
+        description: 'Test name substring match (i.e. pytest -k)'
+        required: false
+        default: 'breathing'
+
 
 # The ref parameter is flexible and can accept:
 # Branch names (e.g., main)
@@ -54,19 +54,19 @@ jobs:
       run_unit_tests: false
 
   integration_tests_ubuntu_upgrade_version:
-    name: Test broker upgrade with 7-node cluster #[${{ matrix.cluster }}/${{ matrix.mode }}/${{ matrix.consistency }}]
-    # strategy:
-    #   matrix:
-    #     mode: ["legacy_mode"]
-    #     cluster: ["multi7"]
-    #     consistency: ["eventual_consistency", "strong_consistency"]
-    #   fail-fast: false
+    name: Test broker upgrade with 7-node cluster [${{ matrix.cluster }}/${{ matrix.mode }}/${{ matrix.consistency }}]
+    strategy:
+      matrix:
+        mode: ["legacy_mode"]
+        cluster: ["multi7"]
+        consistency: ["eventual_consistency", "strong_consistency"]
+      fail-fast: false
     runs-on: ubuntu-latest
     needs:
       - build1
       - build2
-    # env:
-    #     RUN_UID: ${{ matrix.cluster }}_${{ matrix.mode }}_${{ matrix.consistency }}
+    env:
+        RUN_UID: ${{ matrix.cluster }}_${{ matrix.mode }}_${{ matrix.consistency }}
     steps:
       - name: Checkout ITs repo
         uses: actions/checkout@v4
@@ -120,7 +120,7 @@ jobs:
           pip install -r ./src/python/requirements.txt
 
           ./src/integration-tests/run-tests \
-            "${{ inputs.test_mode }}" \
+            "${{ matrix.mode }} and ${{ matrix.cluster }} and ${{ matrix.consistency }}" \
             --log-level ERROR                   \
             --log-file-level=info               \
             --bmq-tolerate-dirty-shutdown       \
@@ -136,26 +136,25 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.run_id }}_failure_logs
-          # _${{ env.RUN_UID }}
+          name: ${{ github.run_id }}_failure_logs_${{ env.RUN_UID }}
           path: ${{ github.workspace }}/repoit/src/integration-tests/failure-logs
           retention-days: 5
 
 
   integration_tests_ubuntu_two_versions_in_cluster:
-    name: Standard IT # [${{ matrix.cluster }}/${{ matrix.mode }}/${{ matrix.consistency }}]
-    # strategy:
-    #   matrix:
-    #     mode: ["legacy_mode"]
-    #     cluster: ["multi"]
-    #     consistency: ["eventual_consistency", "strong_consistency"]
-    #   fail-fast: false
+    name: IT [${{ matrix.cluster }}/${{ matrix.mode }}/${{ matrix.consistency }}]
+    strategy:
+      matrix:
+        mode: ["legacy_mode"]
+        cluster: ["multi"]
+        consistency: ["eventual_consistency", "strong_consistency"]
+      fail-fast: false
     runs-on: ubuntu-latest
     needs:
       - build1
       - build2
-    # env:
-    #     RUN_UID: ${{ matrix.cluster }}_${{ matrix.mode }}_${{ matrix.consistency }}
+    env:
+        RUN_UID: ${{ matrix.cluster }}_${{ matrix.mode }}_${{ matrix.consistency }}
     steps:
       - name: Checkout ITs repo
         uses: actions/checkout@v4
@@ -217,9 +216,9 @@ jobs:
 
           pip install -r ./src/python/requirements.txt
 
-            
           ./src/integration-tests/run-tests \
-            "${{ inputs.test_mode }}"           \
+            "${{ matrix.mode }} and ${{ matrix.cluster }} and ${{ matrix.consistency }}" \
+            -k "${{ github.event.inputs.test_filter }}" \
             --log-level ERROR                   \
             --log-file-level=info               \
             --bmq-tolerate-dirty-shutdown       \
@@ -234,7 +233,6 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.run_id }}_failure_logs
-          # _${{ env.RUN_UID }}
+          name: ${{ github.run_id }}_failure_logs_${{ env.RUN_UID }}
           path: ${{ github.workspace }}/repoit/src/integration-tests/failure-logs
           retention-days: 5
