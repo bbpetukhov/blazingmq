@@ -54,7 +54,7 @@ jobs:
       run_unit_tests: false
 
   integration_tests_ubuntu_upgrade_version:
-    name: Test broker upgrade with 7-node cluster [${{ matrix.cluster }}/${{ matrix.mode }}/${{ matrix.consistency }}]
+    name: Test 7-node cluster upgrade [${{ matrix.cluster }}/${{ matrix.mode }}/${{ matrix.consistency }}]
     strategy:
       matrix:
         mode: ["legacy_mode"]
