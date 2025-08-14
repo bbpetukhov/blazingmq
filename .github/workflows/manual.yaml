@@ -116,6 +116,9 @@ jobs:
 
           # Broker path to be used after version upgrade
           BLAZINGMQ_BROKER_NEW_VERSION: "${{ github.workspace }}/repo2/build/blazingmq/src/applications/bmqbrkr/bmqbrkr.tsk"
+
+          # Store all info about cluster in cluster.json
+          BLAZINGMQ_CLUSTER_CONFIG_COMPATIBILITY_MODE: "true"
         run: |
           pip install -r ./src/python/requirements.txt
 
@@ -209,6 +212,9 @@ jobs:
           # Brokers to use repo2:
           BLAZINGMQ_BROKER_EAST2: "${{ github.workspace }}/repo2/build/blazingmq/src/applications/bmqbrkr/bmqbrkr.tsk"
           BLAZINGMQ_BROKER_WEST1: "${{ github.workspace }}/repo2/build/blazingmq/src/applications/bmqbrkr/bmqbrkr.tsk"
+
+          # Store all info about cluster in cluster.json
+          BLAZINGMQ_CLUSTER_CONFIG_COMPATIBILITY_MODE: "true"
         run: |
           go install github.com/kevwan/tproxy@latest
           export GOPATH=$HOME/go
