@@ -271,6 +271,7 @@ jobs:
             libfl-dev \
             libbenchmark-dev \
             libgmock-dev \
+            libzstd-dev \
             libz-dev \
             autoconf \
             libtool
