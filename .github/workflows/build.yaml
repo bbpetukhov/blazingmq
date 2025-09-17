@@ -236,6 +236,7 @@ jobs:
             google-benchmark \
             googletest \
             python@3.10 \
+            zstd \
             zlib
 
       - name: Build BlazingMQ
@@ -271,6 +272,7 @@ jobs:
             libfl-dev \
             libbenchmark-dev \
             libgmock-dev \
+            libzstd-dev \
             libz-dev \
             autoconf \
             libtool
