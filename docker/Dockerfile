@@ -15,6 +15,7 @@ RUN apt-get update && \
     libfl-dev \
     libbenchmark-dev \
     libgmock-dev \
+    libzstd-dev \
     libz-dev \
     && apt clean \
     && rm -rf /var/lib/apt/lists/*
