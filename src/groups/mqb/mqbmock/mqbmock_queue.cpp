@@ -252,7 +252,7 @@ bsls::Types::Int64 Queue::countUnconfirmed() const
     return 0;
 }
 
-void Queue::stopPushing()
+void Queue::setStopping()
 {
     // NOT IMPLENTED
 }
@@ -363,8 +363,7 @@ void Queue::onOpenFailure(BSLA_UNUSED unsigned int subQueueId)
 }
 
 void Queue::onReceipt(BSLA_UNUSED const bmqt::MessageGUID& msgGUID,
-                      BSLA_UNUSED mqbi::QueueHandle* qH,
-                      BSLA_UNUSED const bsls::Types::Int64& arrivalTimepoint)
+                      BSLA_UNUSED mqbi::QueueHandle* qH)
 {
     // NOTHING
 }

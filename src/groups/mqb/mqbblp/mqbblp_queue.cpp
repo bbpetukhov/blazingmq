@@ -58,6 +58,18 @@
 namespace BloombergLP {
 namespace mqbblp {
 
+namespace {
+
+void onHandleDeconfigured(const bmqp_ctrlmsg::Status&,
+                          const bmqp_ctrlmsg::StreamParameters&,
+                          const bsl::function<void(void)>& cb)
+{
+    BSLS_ASSERT_SAFE(cb);
+    cb();
+}
+
+}
+
 // -----------
 // class Queue
 // -----------
@@ -248,14 +260,6 @@ void Queue::dropHandleDispatched(mqbi::QueueHandle* handle, bool doDeconfigure)
             bmqp::QueueUtil::createHandleParameters(handle->handleParameters(),
                                                     subStreamInfo,
                                                     info.d_counts.d_readCount);
-        if (doDeconfigure) {
-            bmqp_ctrlmsg::StreamParameters nullStreamParameters;
-            nullStreamParameters.appId() = appId;
-
-            configureHandle(handle,
-                            nullStreamParameters,
-                            mqbi::QueueHandle::HandleConfiguredCallback());
-        }
 
         // Set 'isFinal' when releasing the last subStream of this handle
         isFinal = ((++citer) == handle->subStreamInfos().end());
@@ -269,12 +273,36 @@ void Queue::dropHandleDispatched(mqbi::QueueHandle* handle, bool doDeconfigure)
                       << "]. 'isFinal' flag: " << bsl::boolalpha << isFinal
                       << ".";
 
-        // 'releaseHandle' erases from 'handle->subStreamInfos()' invalidating
-        // the iterator.
-        releaseHandleDispatched(handle,
-                                consumerHandleParams,
-                                isFinal,  // isFinal flag
-                                mqbi::QueueHandle::HandleReleasedCallback());
+        if (doDeconfigure) {
+            bmqp_ctrlmsg::StreamParameters nullStreamParameters;
+            nullStreamParameters.appId() = appId;
+
+            // Do not send CloseQueue request without waiting for deconfigure
+            // response.
+            const bsl::function<void(void)> cb = bdlf::BindUtil::bind(
+                &Queue::releaseHandleDispatched,
+                this,
+                handle,
+                consumerHandleParams,
+                isFinal,
+                mqbi::QueueHandle::HandleReleasedCallback());
+
+            configureHandle(handle,
+                            nullStreamParameters,
+                            bdlf::BindUtil::bind(&onHandleDeconfigured,
+                                                 bdlf::PlaceHolders::_1,
+                                                 bdlf::PlaceHolders::_2,
+                                                 cb));
+        }
+        else {
+            // 'releaseHandle' erases from 'handle->subStreamInfos()'
+            // invalidating the iterator.
+            releaseHandleDispatched(
+                handle,
+                consumerHandleParams,
+                isFinal,  // isFinal flag
+                mqbi::QueueHandle::HandleReleasedCallback());
+        }
     }
 }
 
@@ -565,13 +593,12 @@ void Queue::onOpenUpstream(bsls::Types::Uint64 genCount,
     }
 }
 
-void Queue::onReceipt(const bmqt::MessageGUID&  msgGUID,
-                      mqbi::QueueHandle*        queueHandle,
-                      const bsls::Types::Int64& arrivalTimepoint)
+void Queue::onReceipt(const bmqt::MessageGUID& msgGUID,
+                      mqbi::QueueHandle*       queueHandle)
 {
     BSLS_ASSERT_SAFE(d_localQueue_mp);
 
-    d_localQueue_mp->onReceipt(msgGUID, queueHandle, arrivalTimepoint);
+    d_localQueue_mp->onReceipt(msgGUID, queueHandle);
 }
 
 void Queue::onRemoval(const bmqt::MessageGUID& msgGUID,
@@ -900,7 +927,7 @@ bsls::Types::Int64 Queue::countUnconfirmed() const
     return d_state.handleCatalog().countUnconfirmed();  // RETURN
 }
 
-void Queue::stopPushing()
+void Queue::setStopping()
 {
     // executed by the *QUEUE* dispatcher thread
 
@@ -913,6 +940,7 @@ void Queue::stopPushing()
 
         flush();
     }
+    d_state.setStopping();
     queueEngine()->resetState(true);  // isShuttingDown
 }
 

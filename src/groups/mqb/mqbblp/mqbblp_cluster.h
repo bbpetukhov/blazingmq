@@ -554,10 +554,10 @@ class Cluster : public mqbi::Cluster,
     /// specified `queue` with the specified `handleParameters` and invoke
     /// the specified `callback` when finished.
     void
-    configureQueue(mqbi::Queue*                               queue,
-                   const bmqp_ctrlmsg::QueueHandleParameters& handleParameters,
-                   unsigned int upstreamSubQueueId,
-                   const mqbi::Cluster::HandleReleasedCallback& callback)
+    closeQueue(mqbi::Queue*                                 queue,
+               const bmqp_ctrlmsg::QueueHandleParameters&   handleParameters,
+               unsigned int                                 upstreamSubQueueId,
+               const mqbi::Cluster::HandleReleasedCallback& callback)
         BSLS_KEYWORD_OVERRIDE;
 
     /// Invoked whenever an attempt was made to create a queue handle for
@@ -599,7 +599,8 @@ class Cluster : public mqbi::Cluster,
 
     /// Process the specified `response` message as a response to previously
     /// transmitted request.  This is how cluster receives StopResponse from
-    /// a ClusterProxy.
+    /// a ClusterProxy.  This method is invoked in the cluster-dispatcher
+    /// thread.
     void processResponse(const bmqp_ctrlmsg::ControlMessage& response)
         BSLS_KEYWORD_OVERRIDE;
 

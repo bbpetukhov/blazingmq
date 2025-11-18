@@ -246,9 +246,12 @@ class Queue : public mqbi::Queue {
     void setStats(const bsl::shared_ptr<mqbstat::QueueStatsDomain>& stats)
         BSLS_KEYWORD_OVERRIDE;
 
-    /// Stop sending PUSHes but continue receiving CONFIRMs, receiving and
-    /// sending PUTs and ACKs.
-    void stopPushing() BSLS_KEYWORD_OVERRIDE;
+    /// Set the state of this queue to "stopping".
+    /// This is a one-way step before shutting down the broker.
+    /// In this state, the queue will:
+    /// - Continue receiving CONFIRMs, receiving and sending PUTs and ACKs.
+    /// - Stop sending PUSHes and stop idle GC.
+    void setStopping() BSLS_KEYWORD_OVERRIDE;
 
     /// Called when a message with the specified `msgGUID`, `appData`,
     /// `options` and compressionAlgorithmType payload is pushed to this
@@ -319,10 +322,8 @@ class Queue : public mqbi::Queue {
     /// Invoked by the Data Store when it receives quorum Receipts.
     ///
     /// THREAD: This method is called from the Queue's dispatcher thread.
-    void onReceipt(const bmqt::MessageGUID&  msgGUID,
-                   mqbi::QueueHandle*        qH,
-                   const bsls::Types::Int64& arrivalTimepoint)
-        BSLS_KEYWORD_OVERRIDE;
+    void onReceipt(const bmqt::MessageGUID& msgGUID,
+                   mqbi::QueueHandle*       qH) BSLS_KEYWORD_OVERRIDE;
 
     /// Invoked by the Data Store when it removes (times out waiting for
     /// quorum Receipts for) a message with the specified `msgGUID`.  Send

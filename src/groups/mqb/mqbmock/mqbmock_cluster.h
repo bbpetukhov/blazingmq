@@ -364,11 +364,11 @@ class Cluster : public mqbi::Cluster {
     /// Configure the specified `upstreamSubQueueId` subStream of the
     /// specified `queue` with the specified `handleParameters` and invoke
     /// the specified `callback` when finished.
-    void configureQueue(
-        mqbi::Queue*                               queue,
-        const bmqp_ctrlmsg::QueueHandleParameters& handleParameters,
-        unsigned int                               upstreamSubQueueId,
-        const HandleReleasedCallback& callback) BSLS_KEYWORD_OVERRIDE;
+    void
+    closeQueue(mqbi::Queue*                               queue,
+               const bmqp_ctrlmsg::QueueHandleParameters& handleParameters,
+               unsigned int                               upstreamSubQueueId,
+               const HandleReleasedCallback& callback) BSLS_KEYWORD_OVERRIDE;
 
     void onQueueHandleCreated(mqbi::Queue*     queue,
                               const bmqt::Uri& uri,
@@ -428,7 +428,7 @@ class Cluster : public mqbi::Cluster {
     mqbc::ClusterData* _clusterData();
 
     /// Get a modifiable reference to this object's cluster state.
-    mqbc::ClusterState& _state();
+    mqbc::ClusterState* _state();
 
     /// Move the test timer forward the specified `seconds`.
     void advanceTime(int seconds);
@@ -590,9 +590,9 @@ inline mqbc::ClusterData* Cluster::_clusterData()
     return d_clusterData_mp.get();
 }
 
-inline mqbc::ClusterState& Cluster::_state()
+inline mqbc::ClusterState* Cluster::_state()
 {
-    return d_state;
+    return &d_state;
 }
 
 inline bdlbb::BlobBufferFactory* Cluster::bufferFactory()

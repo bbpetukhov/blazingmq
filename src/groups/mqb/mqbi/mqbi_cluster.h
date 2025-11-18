@@ -288,8 +288,8 @@ class Cluster : public DispatcherClient {
     /// used by this cluster.
     virtual RequestManagerType& requestManager() = 0;
 
-    // Return a reference offering a modifiable access to the multi request
-    // manager used by this cluster.
+    /// Return a reference offering a modifiable access to the multi request
+    /// manager used by this cluster.
     virtual MultiRequestManagerType& multiRequestManager() = 0;
 
     /// Send the specified `request` with the specified `timeout` to the
@@ -332,10 +332,10 @@ class Cluster : public DispatcherClient {
     /// specified `queue` with the specified `handleParameters` and invoke
     /// the specified `callback` when finished.
     virtual void
-    configureQueue(Queue*                                     queue,
-                   const bmqp_ctrlmsg::QueueHandleParameters& handleParameters,
-                   unsigned int                  upstreamSubQueueId,
-                   const HandleReleasedCallback& callback) = 0;
+    closeQueue(Queue*                                     queue,
+               const bmqp_ctrlmsg::QueueHandleParameters& handleParameters,
+               unsigned int                               upstreamSubQueueId,
+               const HandleReleasedCallback&              callback) = 0;
 
     /// Invoked whenever an attempt was made to create a queue handle for
     /// the specified `queue` having the specified `uri`, with

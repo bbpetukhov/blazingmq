@@ -57,6 +57,13 @@
 namespace BloombergLP {
 namespace mqbblp {
 
+namespace {
+
+/// The number of messages to expire on idle.
+const int k_EXPIRE_MESSAGES_BATCH_SIZE = 1000;
+
+}
+
 // ----------------
 // class LocalQueue
 // ----------------
@@ -373,8 +380,19 @@ void LocalQueue::flush()
     // until it gets rolled back.  If 'flush' gets called in between, the queue
     // may have no storage.
     if (d_state_p->storage()) {
-        const bsls::Types::Int64 now = bmqsys::Time::highResolutionTimer();
-        d_state_p->storage()->gcHistory(now);
+        if (!d_state_p->isStopping()) {
+            const bsls::Types::Int64 now = bmqsys::Time::highResolutionTimer();
+            d_state_p->storage()->gcHistory(now);
+
+            const bdlt::Datetime currentTimeUtc = bdlt::CurrentTime::utc();
+            const bsls::Types::Uint64 currentSecondsFromEpoch =
+                static_cast<bsls::Types::Uint64>(
+                    bdlt::EpochUtil::convertToTimeT64(currentTimeUtc));
+            d_state_p->storage()->gcExpiredMessages(
+                currentTimeUtc,
+                currentSecondsFromEpoch,
+                k_EXPIRE_MESSAGES_BATCH_SIZE);
+        }
 
         // See notes in 'FileStore::flushStorage' for motivation behind
         // this flush:
@@ -419,7 +437,7 @@ void LocalQueue::postMessage(const bmqp::PutHeader&              putHeader,
                 << "#CLIENT_IMPROPER_BEHAVIOR "
                 << "Failed PUT message for queue [" << d_state_p->uri()
                 << "] from client [" << source->client()->description()
-                << "]. Queue not opened in WRITE mode by the client.";);
+                << "]. Queue not opened in WRITE mode by the client.");
 
         bmqp::AckMessage ackMessage;
         ackMessage
@@ -484,24 +502,16 @@ void LocalQueue::postMessage(const bmqp::PutHeader&              putHeader,
 
     // Send acknowledgement if post failed or if ack was requested (both could
     // be true as well).
-    if (res != mqbi::StorageResult::e_SUCCESS || haveReceipt) {
-        // Calculate time delta between PUT and ACK
-        const bsls::Types::Int64 timeDelta =
-            bmqsys::Time::highResolutionTimer() - timePoint;
-        d_state_p->stats()
-            ->onEvent<mqbstat::QueueStatsDomain::EventType::e_ACK_TIME>(
-                timeDelta);
-        if (res != mqbi::StorageResult::e_SUCCESS || doAck) {
-            bmqp::AckMessage ackMessage;
-            ackMessage
-                .setStatus(bmqp::ProtocolUtil::ackResultToCode(
-                    mqbi::StorageResult::toAckResult(res)))
-                .setMessageGUID(putHeader.messageGUID());
-            // CorrelationId & QueueId are left unset as those fields will
-            // be filled downstream.
+    if (res != mqbi::StorageResult::e_SUCCESS || (haveReceipt && doAck)) {
+        bmqp::AckMessage ackMessage;
+        ackMessage
+            .setStatus(bmqp::ProtocolUtil::ackResultToCode(
+                mqbi::StorageResult::toAckResult(res)))
+            .setMessageGUID(putHeader.messageGUID());
+        // CorrelationId & QueueId are left unset as those fields will
+        // be filled downstream.
 
-            source->onAckMessage(ackMessage);
-        }
+        source->onAckMessage(ackMessage);
     }
 
     if (BSLS_PERFORMANCEHINT_PREDICT_LIKELY(res ==
@@ -547,17 +557,9 @@ void LocalQueue::onPushMessage(
                     "onPushMessage should not be called on LocalQueue");
 }
 
-void LocalQueue::onReceipt(const bmqt::MessageGUID&  msgGUID,
-                           mqbi::QueueHandle*        qH,
-                           const bsls::Types::Int64& arrivalTimepoint)
+void LocalQueue::onReceipt(const bmqt::MessageGUID& msgGUID,
+                           mqbi::QueueHandle*       qH)
 {
-    // Calculate time delta between PUT and ACK
-    const bsls::Types::Int64 timeDelta = bmqsys::Time::highResolutionTimer() -
-                                         arrivalTimepoint;
-
-    d_state_p->stats()
-        ->onEvent<mqbstat::QueueStatsDomain::EventType::e_ACK_TIME>(timeDelta);
-
     if (d_state_p->handleCatalog().hasHandle(qH)) {
         // Send acknowledgement
         bmqp::AckMessage ackMessage;

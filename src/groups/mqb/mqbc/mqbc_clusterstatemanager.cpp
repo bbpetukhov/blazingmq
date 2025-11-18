@@ -64,7 +64,6 @@ ClusterStateManager::ClusterStateManager(
 , d_state_p(clusterState)
 , d_clusterFSM(*this)
 , d_nodeToLedgerLSNMap(allocator)
-, d_lsnQuorum((clusterConfig.nodes().size() / 2) + 1)
 // TODO Add cluster config to determine Eventual vs Strong
 , d_clusterStateLedger_mp(clusterStateLedger)
 , d_storageManager_p(0)
@@ -91,24 +90,6 @@ ClusterStateManager::~ClusterStateManager()
 
 // PRIVATE MANIPULATORS
 //   (virtual: mqbc::ClusterStateTableActions)
-void ClusterStateManager::do_abort(const ClusterFSMArgsSp& args)
-{
-    // executed by the cluster *DISPATCHER* thread
-
-    // PRECONDITIONS
-    BSLS_ASSERT_SAFE(dispatcher()->inDispatcherThread(d_cluster_p));
-    BSLS_ASSERT_SAFE(!args->empty());
-
-    const ClusterFSM::Event::Enum& event = args->front().first;
-
-    BALL_LOG_ERROR << d_clusterData_p->identity().description()
-                   << "Encountered nonsensical input event [" << event
-                   << "] to the current state [" << d_clusterFSM.state()
-                   << "] in the Cluster FSM! Aborting.";
-
-    mqbu::ExitUtil::terminate(mqbu::ExitCode::e_REQUESTED);  // EXIT
-}
-
 void ClusterStateManager::do_startWatchDog(
     BSLA_UNUSED const ClusterFSMArgsSp& args)
 {
@@ -614,7 +595,7 @@ void ClusterStateManager::do_checkLSNQuorum(const ClusterFSMArgsSp& args)
     BSLS_ASSERT_SAFE(d_clusterData_p->electorInfo().isSelfLeader() &&
                      d_clusterFSM.isSelfLeader());
 
-    if (d_nodeToLedgerLSNMap.size() >= d_lsnQuorum) {
+    if (d_nodeToLedgerLSNMap.size() >= getLsnQuorum()) {
         // If we have a quorum of LSNs (including self LSN)
 
         BALL_LOG_INFO << d_clusterData_p->identity().description()
@@ -1160,7 +1141,7 @@ void ClusterStateManager::onFollowerLSNResponse(
     BSLS_ASSERT_SAFE(dispatcher()->inDispatcherThread(d_cluster_p));
     BSLS_ASSERT_SAFE(!d_clusterData_p->cluster().isLocal());
     BSLS_ASSERT_SAFE(d_clusterFSM.isSelfLeader() ||
-                     (d_clusterFSM.state() == ClusterFSM::State::e_STOPPING) ||
+                     (d_clusterFSM.state() == ClusterFSM::State::e_STOPPED) ||
                      (d_clusterFSM.state() == ClusterFSM::State::e_UNKNOWN));
 
     const NodeResponsePairs& pairs = requestContext->response();
@@ -1245,7 +1226,7 @@ void ClusterStateManager::onRegistrationResponse(
     BSLS_ASSERT_SAFE(!d_clusterData_p->cluster().isLocal());
     BSLS_ASSERT_SAFE(!d_clusterData_p->electorInfo().isSelfLeader());
     BSLS_ASSERT_SAFE(d_clusterFSM.isSelfFollower() ||
-                     (d_clusterFSM.state() == ClusterFSM::State::e_STOPPING) ||
+                     (d_clusterFSM.state() == ClusterFSM::State::e_STOPPED) ||
                      (d_clusterFSM.state() == ClusterFSM::State::e_UNKNOWN));
     BSLS_ASSERT_SAFE(source);
 
@@ -1311,7 +1292,7 @@ void ClusterStateManager::onFollowerClusterStateResponse(
     BSLS_ASSERT_SAFE(dispatcher()->inDispatcherThread(d_cluster_p));
     BSLS_ASSERT_SAFE(!d_clusterData_p->cluster().isLocal());
     BSLS_ASSERT_SAFE(d_clusterFSM.isSelfLeader() ||
-                     (d_clusterFSM.state() == ClusterFSM::State::e_STOPPING) ||
+                     (d_clusterFSM.state() == ClusterFSM::State::e_STOPPED) ||
                      (d_clusterFSM.state() == ClusterFSM::State::e_UNKNOWN));
 
     if (requestContext->result() != bmqt::GenericResult::e_SUCCESS) {
@@ -1462,7 +1443,7 @@ void ClusterStateManager::markOrphan(
     BSLS_ASSERT_SAFE(dispatcher()->inDispatcherThread(d_cluster_p));
     BSLS_ASSERT_SAFE(primary);
 
-    for (int i = 0; i < static_cast<int>(partitions.size()); ++i) {
+    for (int i = static_cast<int>(partitions.size()) - 1; 0 <= i; --i) {
         const mqbc::ClusterStatePartitionInfo& pinfo = d_state_p->partition(
             partitions[i]);
         d_state_p->setPartitionPrimary(partitions[i],

@@ -108,7 +108,7 @@ void ClusterProxy::generateNack(bmqt::AckResult::Enum               status,
         d_throttledSkippedPutMessages,
         BALL_LOG_ERROR << description() << ": skipping relay-PUT message ["
                        << "queueId: " << putHeader.queueId() << ", GUID: "
-                       << putHeader.messageGUID() << "], rc: " << rc << ".";);
+                       << putHeader.messageGUID() << "], rc: " << rc << ".");
 }
 
 void ClusterProxy::startDispatched()
@@ -170,7 +170,7 @@ void ClusterProxy::initiateShutdownDispatched(const VoidFunctor& callback)
     // Mark self as stopping.
     d_isStopping = true;
 
-    d_queueHelper.requestToStopPushing();
+    d_queueHelper.requestToStopQueues();
     // 'checkUnconfirmedV2' serves as synchronization.
     // It makes sure stopPushing() gets executed before the return.
     bsls::TimeInterval whenToStop(
@@ -485,7 +485,7 @@ void ClusterProxy::onAckEvent(const mqbi::DispatcherAckEvent& event)
                 BALL_LOG_INFO << "Received an ACK for unknown queue "
                               << "[queueId: " << ackMessage.queueId()
                               << ", guid: " << ackMessage.messageGUID()
-                              << ", status: " << ackMessage.status() << "]";);
+                              << ", status: " << ackMessage.status() << "]");
             continue;  // RETURN
         }
 
@@ -518,7 +518,7 @@ void ClusterProxy::onRelayPutEvent(const mqbi::DispatcherPutEvent& event,
             BALL_LOG_WARN << description() << ": skipping relay-PUT message ["
                           << "queueId: " << ph.queueId() << ", GUID: "
                           << ph.messageGUID() << "], genCount: " << genCount
-                          << " vs " << term << ".";);
+                          << " vs " << term << ".");
         return;  // RETURN
     }
 
@@ -802,19 +802,16 @@ ClusterProxy::sendRequest(const RequestManagerType::RequestSp& request,
 void ClusterProxy::processResponse(
     const bmqp_ctrlmsg::ControlMessage& response)
 {
-    // executed by *ANY* thread
+    // executed by the cluster *DISPATCHER* thread
 
     // PRECONDITIONS
     // Control message has an id
     BSLS_ASSERT_SAFE((!response.rId().isNull()));
 
-    // This is a response to a request.  Forward it to the cluster-dispatcher
-    // thread.
-    dispatcher()->execute(
-        bdlf::BindUtil::bind(&ClusterProxy::processResponseDispatched,
-                             this,
-                             response),
-        this);
+    // This is a response to a request.
+    // Call `processResponseDispatched` directly since we are already in the
+    // dispatcher thread.
+    processResponseDispatched(response);
 }
 
 void ClusterProxy::processPeerStopResponse(
@@ -1156,7 +1153,7 @@ void ClusterProxy::configureQueue(
                                  callback);
 }
 
-void ClusterProxy::configureQueue(
+void ClusterProxy::closeQueue(
     mqbi::Queue*                                 queue,
     const bmqp_ctrlmsg::QueueHandleParameters&   handleParameters,
     unsigned int                                 upstreamSubQueueId,
@@ -1167,10 +1164,10 @@ void ClusterProxy::configureQueue(
     // PRECONDITIONS
     BSLS_ASSERT_SAFE(dispatcher()->inDispatcherThread(queue));
 
-    d_queueHelper.configureQueue(queue,
-                                 handleParameters,
-                                 upstreamSubQueueId,
-                                 callback);
+    d_queueHelper.closeQueue(queue,
+                             handleParameters,
+                             upstreamSubQueueId,
+                             callback);
 }
 
 void ClusterProxy::onQueueHandleCreated(mqbi::Queue*     queue,
