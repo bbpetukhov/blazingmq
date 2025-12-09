@@ -257,7 +257,7 @@ void StatController::captureStatsAndSemaphorePost(
     switch (encoding) {
     case mqbcmd::EncodingFormat::TEXT: {
         bmqu::MemOutStream os;
-        d_printer_mp->printStats(os);
+        d_printer_mp->printStats(os, 0, bdlt::Datetime());
         result->makeStats() = os.str();
     } break;  // BREAK
 
@@ -270,10 +270,13 @@ void StatController::captureStatsAndSemaphorePost(
         // outdated existing one.
         const bool savedNextSnapshot = snapshot();
         if (savedNextSnapshot) {
-            const bool compact = (encoding ==
+            const bool         compact = (encoding ==
                                   mqbcmd::EncodingFormat::JSON_COMPACT);
-            const int  rc = d_jsonPrinter_mp->printStats(&result->makeStats(),
-                                                        compact);
+            bmqu::MemOutStream os;
+            const int          rc =
+                d_jsonPrinter_mp->printStats(os, compact, 0, bdlt::Datetime());
+            result->makeStats() = os.str();
+
             if (0 != rc) {
                 result->makeError().message() = "Stats print to json failed";
             }
@@ -586,7 +589,7 @@ void StatController::snapshotAndNotify()
     }
 
     const bool willPrint = d_printer_mp->nextSnapshotWillPrint();
-    d_printer_mp->onSnapshot();
+    d_printer_mp->onSnapshot(d_jsonPrinter_mp.get());
 
     // Finally, perform cleanup of expired stat contexts if we have printed
     // them.

@@ -21,12 +21,14 @@
 // MQB
 #include <mqbstat_queuestats.h>
 
+#include <bmqio_statchannel.h>
 #include <bmqu_memoutstream.h>
 
 // BDE
 #include <ball_log.h>
 #include <bdljsn_json.h>
 #include <bdljsn_jsonutil.h>
+#include <bdlt_iso8601util.h>
 #include <bsls_assert.h>
 
 namespace BloombergLP {
@@ -34,17 +36,17 @@ namespace mqbstat {
 
 namespace {
 
-struct ConversionUtils {
+struct DomainsStatsConversionUtils {
     // PUBLIC CLASS METHODS
 
     /// "domainQueues" stat context:
     /// Populate the specified `bdljsn::JsonObject*` with the values
     /// from the specified `ctx`.
 
-    inline static void
-    populateMetric(bdljsn::JsonObject*                   metricsObject,
-                   const bmqst::StatContext&             ctx,
-                   mqbstat::QueueStatsDomain::Stat::Enum metric)
+    inline static void populateQueueStatsDomainMetric(
+        bdljsn::JsonObject*                   metricsObject,
+        const bmqst::StatContext&             ctx,
+        mqbstat::QueueStatsDomain::Stat::Enum metric)
     {
         // PRECONDITIONS
         BSLS_ASSERT_SAFE(metricsObject);
@@ -56,8 +58,9 @@ struct ConversionUtils {
             .makeNumber() = value;
     }
 
-    inline static void populateQueueStats(bdljsn::JsonObject* queueObject,
-                                          const bmqst::StatContext& ctx)
+    inline static void
+    populateQueueStatsDomainMetrics(bdljsn::JsonObject*       queueObject,
+                                    const bmqst::StatContext& ctx)
     {
         // PRECONDITIONS
         BSLS_ASSERT_SAFE(queueObject);
@@ -71,61 +74,71 @@ struct ConversionUtils {
 
         typedef mqbstat::QueueStatsDomain::Stat Stat;
 
-        populateMetric(&values, ctx, Stat::e_NB_PRODUCER);
-        populateMetric(&values, ctx, Stat::e_NB_CONSUMER);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_NB_PRODUCER);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_NB_CONSUMER);
 
-        populateMetric(&values, ctx, Stat::e_MESSAGES_CURRENT);
-        populateMetric(&values, ctx, Stat::e_MESSAGES_MAX);
-        populateMetric(&values, ctx, Stat::e_MESSAGES_UTILIZATION_MAX);
-        populateMetric(&values, ctx, Stat::e_BYTES_CURRENT);
-        populateMetric(&values, ctx, Stat::e_BYTES_MAX);
-        populateMetric(&values, ctx, Stat::e_BYTES_UTILIZATION_MAX);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_MESSAGES_CURRENT);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_MESSAGES_MAX);
+        populateQueueStatsDomainMetric(&values,
+                                       ctx,
+                                       Stat::e_MESSAGES_UTILIZATION_MAX);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_BYTES_CURRENT);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_BYTES_MAX);
+        populateQueueStatsDomainMetric(&values,
+                                       ctx,
+                                       Stat::e_BYTES_UTILIZATION_MAX);
 
-        populateMetric(&values, ctx, Stat::e_PUT_MESSAGES_DELTA);
-        populateMetric(&values, ctx, Stat::e_PUT_BYTES_DELTA);
-        populateMetric(&values, ctx, Stat::e_PUT_MESSAGES_ABS);
-        populateMetric(&values, ctx, Stat::e_PUT_BYTES_ABS);
+        populateQueueStatsDomainMetric(&values,
+                                       ctx,
+                                       Stat::e_PUT_MESSAGES_DELTA);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_PUT_BYTES_DELTA);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_PUT_MESSAGES_ABS);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_PUT_BYTES_ABS);
 
-        populateMetric(&values, ctx, Stat::e_PUSH_MESSAGES_DELTA);
-        populateMetric(&values, ctx, Stat::e_PUSH_BYTES_DELTA);
-        populateMetric(&values, ctx, Stat::e_PUSH_MESSAGES_ABS);
-        populateMetric(&values, ctx, Stat::e_PUSH_BYTES_ABS);
+        populateQueueStatsDomainMetric(&values,
+                                       ctx,
+                                       Stat::e_PUSH_MESSAGES_DELTA);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_PUSH_BYTES_DELTA);
+        populateQueueStatsDomainMetric(&values,
+                                       ctx,
+                                       Stat::e_PUSH_MESSAGES_ABS);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_PUSH_BYTES_ABS);
 
-        populateMetric(&values, ctx, Stat::e_ACK_DELTA);
-        populateMetric(&values, ctx, Stat::e_ACK_ABS);
-        populateMetric(&values, ctx, Stat::e_ACK_TIME_AVG);
-        populateMetric(&values, ctx, Stat::e_ACK_TIME_MAX);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_ACK_DELTA);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_ACK_ABS);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_ACK_TIME_AVG);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_ACK_TIME_MAX);
 
-        populateMetric(&values, ctx, Stat::e_NACK_DELTA);
-        populateMetric(&values, ctx, Stat::e_NACK_ABS);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_NACK_DELTA);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_NACK_ABS);
 
-        populateMetric(&values, ctx, Stat::e_CONFIRM_DELTA);
-        populateMetric(&values, ctx, Stat::e_CONFIRM_ABS);
-        populateMetric(&values, ctx, Stat::e_CONFIRM_TIME_AVG);
-        populateMetric(&values, ctx, Stat::e_CONFIRM_TIME_MAX);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_CONFIRM_DELTA);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_CONFIRM_ABS);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_CONFIRM_TIME_AVG);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_CONFIRM_TIME_MAX);
 
-        populateMetric(&values, ctx, Stat::e_REJECT_ABS);
-        populateMetric(&values, ctx, Stat::e_REJECT_DELTA);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_REJECT_ABS);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_REJECT_DELTA);
 
-        populateMetric(&values, ctx, Stat::e_QUEUE_TIME_AVG);
-        populateMetric(&values, ctx, Stat::e_QUEUE_TIME_MAX);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_QUEUE_TIME_AVG);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_QUEUE_TIME_MAX);
 
-        populateMetric(&values, ctx, Stat::e_GC_MSGS_DELTA);
-        populateMetric(&values, ctx, Stat::e_GC_MSGS_ABS);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_GC_MSGS_DELTA);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_GC_MSGS_ABS);
 
-        populateMetric(&values, ctx, Stat::e_ROLE);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_ROLE);
 
-        populateMetric(&values, ctx, Stat::e_CFG_MSGS);
-        populateMetric(&values, ctx, Stat::e_CFG_BYTES);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_CFG_MSGS);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_CFG_BYTES);
 
-        populateMetric(&values, ctx, Stat::e_NO_SC_MSGS_DELTA);
-        populateMetric(&values, ctx, Stat::e_NO_SC_MSGS_ABS);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_NO_SC_MSGS_DELTA);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_NO_SC_MSGS_ABS);
 
-        populateMetric(&values, ctx, Stat::e_HISTORY_ABS);
+        populateQueueStatsDomainMetric(&values, ctx, Stat::e_HISTORY_ABS);
     }
 
-    inline static void populateOneDomainStats(bdljsn::JsonObject* domainObject,
-                                              const bmqst::StatContext& ctx)
+    inline static void populateOne(bdljsn::JsonObject*       domainObject,
+                                   const bmqst::StatContext& ctx)
     {
         // PRECONDITIONS
         BSLS_ASSERT_SAFE(domainObject);
@@ -135,7 +148,7 @@ struct ConversionUtils {
              ++queueIt) {
             bdljsn::JsonObject& queueObj =
                 (*domainObject)[queueIt->name()].makeObject();
-            populateQueueStats(&queueObj, *queueIt);
+            populateQueueStatsDomainMetrics(&queueObj, *queueIt);
 
             if (queueIt->numSubcontexts() > 0) {
                 bdljsn::JsonObject& appIdsObject =
@@ -149,7 +162,7 @@ struct ConversionUtils {
                     // Do not expect another nested StatContext within appId
                     BSLS_ASSERT_SAFE(0 == appIdIt->numSubcontexts());
 
-                    populateQueueStats(
+                    populateQueueStatsDomainMetrics(
                         &appIdsObject[appIdIt->name()].makeObject(),
                         *appIdIt);
                 }
@@ -157,18 +170,16 @@ struct ConversionUtils {
         }
     }
 
-    inline static void populateAllDomainsStats(bdljsn::JsonObject* parent,
-                                               const bmqst::StatContext& ctx)
+    inline static void populateAll(bdljsn::JsonObject*       parent,
+                                   const bmqst::StatContext& ctx)
     {
         // PRECONDITIONS
         BSLS_ASSERT_SAFE(parent);
 
-        bdljsn::JsonObject& nodes = (*parent)["domains"].makeObject();
         for (bmqst::StatContextIterator domainIt = ctx.subcontextIterator();
              domainIt;
              ++domainIt) {
-            populateOneDomainStats(&nodes[domainIt->name()].makeObject(),
-                                   *domainIt);
+            populateOne(&(*parent)[domainIt->name()].makeObject(), *domainIt);
         }
     }
 };
@@ -227,7 +238,10 @@ class JsonPrinter::JsonPrinterImpl {
     /// Return `0` on success, and non-zero return code on failure.
     ///
     /// THREAD: This method is called in the *StatController scheduler* thread.
-    int printStats(bsl::string* out, bool compact) const;
+    int printStats(bsl::ostream&         os,
+                   bool                  compact,
+                   int                   statId,
+                   const bdlt::Datetime& now) const;
 };
 
 inline JsonPrinter::JsonPrinterImpl::JsonPrinterImpl(
@@ -246,34 +260,64 @@ inline JsonPrinter::JsonPrinterImpl::JsonPrinterImpl(
     // NOTHING
 }
 
-inline int JsonPrinter::JsonPrinterImpl::printStats(bsl::string* out,
-                                                    bool         compact) const
+inline int
+JsonPrinter::JsonPrinterImpl::printStats(bsl::ostream&         os,
+                                         bool                  compact,
+                                         int                   statsId,
+                                         const bdlt::Datetime& datetime) const
 {
     // executed by *StatController scheduler* thread
 
     // PRECONDITIONS
-    BSLS_ASSERT_SAFE(out);
 
     bdljsn::Json        json;
     bdljsn::JsonObject& obj = json.makeObject();
 
     {
+        bdljsn::JsonNumber& childObj = obj["stats_id"].makeNumber();
+        childObj                     = statsId;
+    }
+    {
+        // Output datetime in de-facto standard ISO-8601 format:
+        char buffer[64];
+        bdlt::Iso8601Util::generate(buffer, sizeof(buffer), datetime);
+        obj["timestamp"].makeString(buffer);
+    }
+    // Populate DOMAIN QUEUES stats
+    {
         const bmqst::StatContext& ctx =
             *d_contexts.find("domainQueues")->second;
+
         bdljsn::JsonObject& domainQueuesObj = obj["domainQueues"].makeObject();
 
-        ConversionUtils::populateAllDomainsStats(&domainQueuesObj, ctx);
+        DomainsStatsConversionUtils::populateAll(&domainQueuesObj, ctx);
+    }
+    // Populate CLIENTS stats
+    {
+        const bmqst::StatContext& ctx = *d_contexts.find("clients")->second;
+
+        bdljsn::JsonObject& clientsObj = obj["clients"].makeObject();
+
+        ClientStatsConversionUtils::populateAll(&clientsObj, ctx);
+    }
+    // Populate CLUSTERS stats
+    {
+        const bmqst::StatContext& ctx =
+            *d_contexts.find("clusterNodes")->second;
+
+        bdljsn::JsonObject& clustersObj = obj["clusters"].makeObject();
+
+        ClientStatsConversionUtils::populateAll(&clustersObj, ctx);
     }
 
     const bdljsn::WriteOptions& ops = compact ? d_opsCompact : d_opsPretty;
 
-    bmqu::MemOutStream os;
-    const int          rc = bdljsn::JsonUtil::write(os, json, ops);
+    const int rc = bdljsn::JsonUtil::write(os, json, ops);
     if (0 != rc) {
         BALL_LOG_ERROR << "Failed to encode stats JSON, rc = " << rc;
         return rc;  // RETURN
     }
-    (*out) = os.str();
+
     return 0;
 }
 
@@ -290,15 +334,17 @@ JsonPrinter::JsonPrinter(const StatContextsMap& statContextsMap,
                    alloc);
 }
 
-int JsonPrinter::printStats(bsl::string* out, bool compact) const
+int JsonPrinter::printStats(bsl::ostream&         os,
+                            bool                  compact,
+                            int                   statsId,
+                            const bdlt::Datetime& datetime) const
 {
     // executed by *StatController scheduler* thread
 
     // PRECONDITIONS
-    BSLS_ASSERT_SAFE(out);
     BSLS_ASSERT_SAFE(d_impl_mp);
 
-    return d_impl_mp->printStats(out, compact);
+    return d_impl_mp->printStats(os, compact, statsId, datetime);
 }
 
 }  // close package namespace

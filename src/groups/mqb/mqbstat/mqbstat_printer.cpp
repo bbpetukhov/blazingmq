@@ -211,9 +211,15 @@ void Printer::stop()
     d_statLogCleaner.stop();
 }
 
-void Printer::printStats(bsl::ostream& stream)
+void Printer::printStats(bsl::ostream&         stream,
+                         int                   statsId,
+                         const bdlt::Datetime& datetime)
 {
     // This must execute in the 'snapshot' thread
+
+    stream << "===== ===== ===== ===== ===== ===== ===== ===== ===== =====\n"
+           << "Stats id: " << statsId << " @ " << datetime << "\n"
+           << "===== ===== ===== ===== ===== ===== ===== ===== ===== =====\n";
 
     // DOMAINQUEUES
     stream << "\n"
@@ -267,7 +273,7 @@ void Printer::printStats(bsl::ostream& stream)
     bmqst::TableUtil::printTable(stream, context->d_tip);
 }
 
-void Printer::logStats()
+void Printer::logStats(JsonPrinter* jsonPrinter)
 {
     ++d_lastStatId;
 
@@ -288,18 +294,20 @@ void Printer::logStats()
     // Dump stats into bmqbrkr.stats.log
     attributes.clearMessage();
     bsl::ostream os(&attributes.messageStreamBuf());
-    os << "===== ===== ===== ===== ===== ===== ===== ===== ===== =====\n"
-       << "Stats id: " << d_lastStatId << " @ " << now << "\n"
-       << "===== ===== ===== ===== ===== ===== ===== ===== ===== =====\n";
-
-    printStats(os);
+    if (d_lastStatId % 2 == 0 || !jsonPrinter) {
+        printStats(os, d_lastStatId, now);
+    }
+    else {
+        const bool isCompact = false;
+        jsonPrinter->printStats(os, isCompact, d_lastStatId, now);
+    }
 
     d_statsLogFile.publish(
         record,
         ball::Context(ball::Transmission::e_MANUAL_PUBLISH, 0, 1));
 }
 
-void Printer::onSnapshot()
+void Printer::onSnapshot(JsonPrinter* jsonPrinter)
 {
     // Check if we need to print the stats to log
     if (!isEnabled() || --d_actionCounter != 0) {
@@ -309,7 +317,7 @@ void Printer::onSnapshot()
     d_actionCounter = d_config.printer().printInterval() /
                       d_config.snapshotInterval();
 
-    logStats();
+    logStats(jsonPrinter);
 }
 
 }  // close package namespace

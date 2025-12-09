@@ -32,6 +32,7 @@
 #include <bmqst_statcontext.h>
 #include <bmqst_table.h>
 #include <bmqtsk_logcleaner.h>
+#include <mqbstat_jsonprinter.h>
 
 // BDE
 #include <ball_fileobserver2.h>
@@ -147,13 +148,15 @@ class Printer {
     /// Print the stats to the specified `stream`.
     ///
     /// THREAD: This method is called in the `snapshot` thread.
-    void printStats(bsl::ostream& stream);
+    void printStats(bsl::ostream&         stream,
+                    int                   statsId,
+                    const bdlt::Datetime& datetime);
 
     /// Dump the stats to the stat log file.
-    void logStats();
+    void logStats(JsonPrinter* jsonPrinter = 0);
 
     /// Print the stats to the stats log file at the appropriate time.
-    void onSnapshot();
+    void onSnapshot(JsonPrinter* jsonPrinter = 0);
 
     // ACCESSORS
 

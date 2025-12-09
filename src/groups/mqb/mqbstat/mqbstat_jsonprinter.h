@@ -77,7 +77,10 @@ class JsonPrinter {
     /// Return `0` on success, and non-zero return code on failure.
     ///
     /// THREAD: This method is called in the *StatController scheduler* thread.
-    int printStats(bsl::string* out, bool compact) const;
+    int printStats(bsl::ostream&         os,
+                   bool                  compact,
+                   int                   statsId,
+                   const bdlt::Datetime& datetime) const;
 };
 
 }  // close package namespace
