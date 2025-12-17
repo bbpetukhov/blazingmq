@@ -37,7 +37,7 @@ namespace mqbstat {
 
 namespace {
 
-struct DomainsStatsConversionUtils {
+struct DomainsStatsPrintUtils {
     // PUBLIC CLASS METHODS
 
     /// "domainQueues" stat context:
@@ -60,18 +60,19 @@ struct DomainsStatsConversionUtils {
     }
 
     inline static void
-    populateQueueStatsDomainMetrics(bdljsn::JsonObject*       queueObject,
+    populateQueueStatsDomainMetrics(bsl::ostream&             os,
+                                    const bdljsn::Json&       parent,
                                     const bmqst::StatContext& ctx)
     {
         // PRECONDITIONS
-        BSLS_ASSERT_SAFE(queueObject);
 
         if (ctx.numValues() == 0) {
             // Prefer to omit an empty "values" object
             return;  // RETURN
         }
 
-        bdljsn::JsonObject& values = (*queueObject)["values"].makeObject();
+        bdljsn::Json        json(parent, parent.allocator());
+        bdljsn::JsonObject& values = json.theObject();
 
         typedef mqbstat::QueueStatsDomain::Stat Stat;
 
@@ -126,25 +127,30 @@ struct DomainsStatsConversionUtils {
         populateMetric(&values, ctx, Stat::e_NO_SC_MSGS_ABS);
 
         populateMetric(&values, ctx, Stat::e_HISTORY_ABS);
+
+        bdljsn::WriteOptions opts = bdljsn::WriteOptions()
+                                        .setSpacesPerLevel(2)
+                                        .setStyle(
+                                            bdljsn::WriteStyle::e_COMPACT)
+                                        .setSortMembers(false);
+        const int rc = bdljsn::JsonUtil::write(os, json, opts);
+        BSLS_ASSERT_SAFE(0 == rc);
+        os << bsl::endl;
     }
 
-    inline static void populateOne(bdljsn::JsonObject*       domainObject,
+    inline static void populateOne(bsl::ostream&             os,
+                                   const bdljsn::Json&       parent,
                                    const bmqst::StatContext& ctx)
     {
         // PRECONDITIONS
-        BSLS_ASSERT_SAFE(domainObject);
 
         for (bmqst::StatContextIterator queueIt = ctx.subcontextIterator();
              queueIt;
              ++queueIt) {
-            bdljsn::JsonObject& queueObj =
-                (*domainObject)[queueIt->name()].makeObject();
-            populateQueueStatsDomainMetrics(&queueObj, *queueIt);
+            bdljsn::Json json(parent, parent.allocator());
+            json.theObject().insert("queue_name", queueIt->name());
 
             if (queueIt->numSubcontexts() > 0) {
-                bdljsn::JsonObject& appIdsObject =
-                    queueObj["appIds"].makeObject();
-
                 // Add metrics per appId, if any
                 for (bmqst::StatContextIterator appIdIt =
                          queueIt->subcontextIterator();
@@ -153,24 +159,32 @@ struct DomainsStatsConversionUtils {
                     // Do not expect another nested StatContext within appId
                     BSLS_ASSERT_SAFE(0 == appIdIt->numSubcontexts());
 
-                    populateQueueStatsDomainMetrics(
-                        &appIdsObject[appIdIt->name()].makeObject(),
-                        *appIdIt);
+                    bdljsn::Json jsonApp(parent, parent.allocator());
+                    jsonApp.theObject().insert("app_id", appIdIt->name());
+
+                    populateQueueStatsDomainMetrics(os, jsonApp, *appIdIt);
                 }
+            }
+            else {
+                populateQueueStatsDomainMetrics(os, json, *queueIt);
             }
         }
     }
 
-    inline static void populateAll(bdljsn::JsonObject*       parent,
+    inline static void populateAll(bsl::ostream&             os,
+                                   const bdljsn::Json&       parent,
                                    const bmqst::StatContext& ctx)
     {
         // PRECONDITIONS
-        BSLS_ASSERT_SAFE(parent);
+        bdljsn::Json json(parent, parent.allocator());
 
         for (bmqst::StatContextIterator domainIt = ctx.subcontextIterator();
              domainIt;
              ++domainIt) {
-            populateOne(&(*parent)[domainIt->name()].makeObject(), *domainIt);
+            json.theObject().insert("domain_name",
+                                    bdljsn::Json(domainIt->name(),
+                                                 parent.allocator()));
+            populateOne(os, json, *domainIt);
         }
     }
 };
@@ -456,62 +470,69 @@ JsonPrinter::JsonPrinterImpl::printStats(bsl::ostream&         os,
 
     // PRECONDITIONS
 
-    bdljsn::Json        json;
-    bdljsn::JsonObject& obj = json.makeObject();
+    bdljsn::Json json;
+    json.makeObject();
 
     {
-        bdljsn::JsonNumber& childObj = obj["stats_id"].makeNumber();
-        childObj                     = statsId;
+        // Output stats_id
+        json.theObject().insert("stats_id", bdljsn::JsonNumber(statsId));
     }
     {
         // Output datetime in de-facto standard ISO-8601 format:
         char buffer[64];
         bdlt::Iso8601Util::generate(buffer, sizeof(buffer), datetime);
-        obj["timestamp"].makeString(buffer);
+        json.theObject().insert("timestamp", buffer);
     }
     // Populate DOMAIN QUEUES stats
     {
         const bmqst::StatContext& ctx =
             *d_contexts.find("domainQueues")->second;
 
-        bdljsn::JsonObject& domainQueuesObj = obj["domainQueues"].makeObject();
-
-        DomainsStatsConversionUtils::populateAll(&domainQueuesObj, ctx);
+        DomainsStatsPrintUtils::populateAll(os, json, ctx);
     }
-    // Populate CLIENTS stats
-    {
-        const bmqst::StatContext& ctx = *d_contexts.find("clients")->second;
+    // {
+    //     const bmqst::StatContext& ctx =
+    //         *d_contexts.find("domainQueues")->second;
 
-        bdljsn::JsonObject& clientsObj = obj["clients"].makeObject();
+    //     bdljsn::JsonObject& domainQueuesObj =
+    //     obj["domainQueues"].makeObject();
 
-        ClientStatsConversionUtils::populateAll(&clientsObj, ctx);
-    }
-    // Populate CLUSTERS stats
-    {
-        const bmqst::StatContext& ctx =
-            *d_contexts.find("clusterNodes")->second;
+    //     DomainsStatsConversionUtils::populateAll(&domainQueuesObj, ctx);
+    // }
+    // // Populate CLIENTS stats
+    // {
+    //     const bmqst::StatContext& ctx = *d_contexts.find("clients")->second;
 
-        bdljsn::JsonObject& clustersObj = obj["clusters"].makeObject();
+    //     bdljsn::JsonObject& clientsObj = obj["clients"].makeObject();
 
-        ClientStatsConversionUtils::populateAll(&clustersObj, ctx);
-    }
+    //     ClientStatsConversionUtils::populateAll(&clientsObj, ctx);
+    // }
+    // // Populate CLUSTERS stats
+    // {
+    //     const bmqst::StatContext& ctx =
+    //         *d_contexts.find("clusterNodes")->second;
 
-    // Populate TCP CHANNELS stats
-    {
-        const bmqst::StatContext& ctx = *d_contexts.find("channels")->second;
+    //     bdljsn::JsonObject& clustersObj = obj["clusters"].makeObject();
 
-        bdljsn::JsonObject& tcpChannelsObj = obj["channels"].makeObject();
+    //     ClientStatsConversionUtils::populateAll(&clustersObj, ctx);
+    // }
 
-        ChannelStatsConversionUtils::populateAll(&tcpChannelsObj, ctx);
-    }
+    // // Populate TCP CHANNELS stats
+    // {
+    //     const bmqst::StatContext& ctx =
+    //     *d_contexts.find("channels")->second;
 
-    const bdljsn::WriteOptions& ops = compact ? d_opsCompact : d_opsPretty;
+    //     bdljsn::JsonObject& tcpChannelsObj = obj["channels"].makeObject();
 
-    const int rc = bdljsn::JsonUtil::write(os, json, ops);
-    if (0 != rc) {
-        BALL_LOG_ERROR << "Failed to encode stats JSON, rc = " << rc;
-        return rc;  // RETURN
-    }
+    //     ChannelStatsConversionUtils::populateAll(&tcpChannelsObj, ctx);
+    // }
+
+    // const bdljsn::WriteOptions& ops = compact ? d_opsCompact : d_opsPretty;
+    // const int rc = bdljsn::JsonUtil::write(os, json, ops);
+    // if (0 != rc) {
+    //     BALL_LOG_ERROR << "Failed to encode stats JSON, rc = " << rc;
+    //     return rc;  // RETURN
+    // }
 
     return 0;
 }
