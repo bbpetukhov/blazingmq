@@ -305,17 +305,17 @@ struct ChannelStatsConversionUtils {
             .makeNumber() = value;
     }
 
-    inline static void populatePortMetrics(bdljsn::JsonObject*       xObject,
+    inline static void populatePortMetrics(bsl::ostream&             os,
+                                           const bdljsn::Json&       parent,
                                            const bmqst::StatContext& ctx)
     {
-        // PRECONDITIONS
-        BSLS_ASSERT_SAFE(xObject);
         if (ctx.numValues() == 0) {
             // Prefer to omit an empty "values" object
             return;  // RETURN
         }
 
-        bdljsn::JsonObject& values = (*xObject)["values"].makeObject();
+        bdljsn::Json        json(parent, parent.allocator());
+        bdljsn::JsonObject& values = json.theObject();
 
         typedef bmqio::StatChannelFactoryUtil::Stat Stat;
 
@@ -327,26 +327,25 @@ struct ChannelStatsConversionUtils {
         populateMetric(&values, ctx, Stat::e_CONNECTIONS_ABS);
     }
 
-    inline static void populatePort(bdljsn::JsonObject*       portObject,
+    inline static void populatePort(bsl::ostream&             os,
+                                    const bdljsn::Json&       parent,
                                     const bmqst::StatContext& ctx)
     {
-        // PRECONDITIONS
-        BSLS_ASSERT_SAFE(portObject);
-
         for (bmqst::StatContextIterator xIt = ctx.subcontextIterator(); xIt;
              ++xIt) {
             // Populate channel metrics (e.g. 127.0.0.1~localhost:36160)
-            bdljsn::JsonObject& xObj = (*portObject)[xIt->name()].makeObject();
 
-            populatePortMetrics(&xObj, *xIt);
+            bdljsn::Json json(parent, parent.allocator());
+            json.theObject().insert("channel_name", xIt->name());
+
+            populatePortMetrics(os, json, *xIt);
         }
     }
 
-    inline static void populateOne(bdljsn::JsonObject*       channelObject,
+    inline static void populateOne(bsl::ostream&             os,
+                                   const bdljsn::Json&       parent,
                                    const bmqst::StatContext& ctx)
     {
-        // PRECONDITIONS
-        BSLS_ASSERT_SAFE(channelObject);
         for (bmqst::StatContextIterator portIt = ctx.subcontextIterator();
              portIt;
              ++portIt) {
@@ -355,24 +354,25 @@ struct ChannelStatsConversionUtils {
             char portItName[64];
             sprintf(portItName, "%lld", portIt->id());
 
-            bdljsn::JsonObject& portObj =
-                (*channelObject)[portItName].makeObject();
-            populatePort(&portObj, *portIt);
+            bdljsn::Json json(parent, parent.allocator());
+            json.theObject().insert("port_id", portItName);
+            populatePort(os, json, *portIt);
         }
     }
 
-    inline static void populateAll(bdljsn::JsonObject*       parent,
+    inline static void populateAll(bsl::ostream&             os,
+                                   const bdljsn::Json&       parent,
                                    const bmqst::StatContext& ctx)
     {
-        // PRECONDITIONS
-        BSLS_ASSERT_SAFE(parent);
-
         for (bmqst::StatContextIterator channelIt = ctx.subcontextIterator();
              channelIt;
              ++channelIt) {
-            // Populate channel metrics (e.g. remote/local)
-            populateOne(&(*parent)[channelIt->name()].makeObject(),
-                        *channelIt);
+            // Populate channel metrics type (e.g. remote/local)
+
+            bdljsn::Json json(parent, parent.allocator());
+            json.theObject().insert("channel_type", channelIt->name());
+
+            populateOne(os, json, *channelIt);
         }
     }
 };
@@ -408,6 +408,9 @@ class JsonPrinter::JsonPrinterImpl {
 
     /// StatContext-s map
     const StatContextsMap d_contexts;
+
+    /// Allocator
+    bslma::Allocator* d_allocator_p;
 
   private:
     // NOT IMPLEMENTED
@@ -449,6 +452,7 @@ inline JsonPrinter::JsonPrinterImpl::JsonPrinterImpl(
                   .setStyle(bdljsn::WriteStyle::e_PRETTY)
                   .setSortMembers(true))
 , d_contexts(statContextsMap, allocator)
+, d_allocator_p(allocator)
 {
     // NOTHING
 }
@@ -463,7 +467,7 @@ JsonPrinter::JsonPrinterImpl::printStats(bsl::ostream&         os,
 
     // PRECONDITIONS
 
-    bdljsn::Json json;
+    bdljsn::Json json(d_allocator_p);
     json.makeObject();
 
     {
@@ -489,15 +493,13 @@ JsonPrinter::JsonPrinterImpl::printStats(bsl::ostream&         os,
 
         ClientStatsConversionUtils::populateAll(os, json, ctx);
     }
-    // // Populate CLUSTERS stats
-    // {
-    //     const bmqst::StatContext& ctx =
-    //         *d_contexts.find("clusterNodes")->second;
+    // Populate CLUSTERS stats
+    {
+        const bmqst::StatContext& ctx =
+            *d_contexts.find("clusterNodes")->second;
 
-    //     bdljsn::JsonObject& clustersObj = obj["clusters"].makeObject();
-
-    //     ClientStatsConversionUtils::populateAll(&clustersObj, ctx);
-    // }
+        ClientStatsConversionUtils::populateAll(os, json, ctx);
+    }
 
     // // Populate TCP CHANNELS stats
     // {
