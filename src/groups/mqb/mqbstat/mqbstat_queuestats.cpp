@@ -375,6 +375,7 @@ QueueStatsDomain::getValue(const bmqst::StatContext& context,
 
 #undef STAT_RANGE
 #undef STAT_SINGLE
+#undef OLDEST_SNAPSHOT
 }
 
 QueueStatsDomain::QueueStatsDomain(bslma::Allocator* allocator)
@@ -737,6 +738,7 @@ QueueStatsClient::getValue(const bmqst::StatContext& context,
 
 #undef STAT_RANGE
 #undef STAT_SINGLE
+#undef OLDEST_SNAPSHOT
 }
 
 QueueStatsClient::QueueStatsClient()

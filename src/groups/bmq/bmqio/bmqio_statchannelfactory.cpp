@@ -412,6 +412,7 @@ StatChannelFactoryUtil::getValue(const bmqst::StatContext& context,
 
 #undef STAT_RANGE
 #undef STAT_SINGLE
+#undef OLDEST_SNAPSHOT
 }
 
 }  // close package namespace
