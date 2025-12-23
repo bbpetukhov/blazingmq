@@ -39,14 +39,40 @@ namespace mqbstat {
 
 namespace {
 
-struct PrintUtils {
-    inline static void printJson(bsl::ostream& os, const bdljsn::Json& json)
+// ----------------------------------
+// class JsonPrettyPrinter
+// ----------------------------------
+
+/// The implementation class for JsonPrettyPrinter which incapsulates
+/// printing to a stream with specified write options (e.g. compact or pretty).
+
+class JsonPrettyPrinter {
+  private:
+    // DATA
+
+    /// Output stream to print JSON to
+    bsl::ostream& os;
+
+    /// Options for printing a compact JSON
+    const bdljsn::WriteOptions& opts;
+
+  public:
+    // CREATORS
+
+    /// Create a new `JsonPrinterImpl` object, using the specified
+    /// stream and the specified write options.
+    explicit JsonPrettyPrinter(bsl::ostream&               os,
+                               const bdljsn::WriteOptions& opts)
+    : os(os)
+    , opts(opts)
     {
-        bdljsn::WriteOptions opts = bdljsn::WriteOptions()
-                                        .setSpacesPerLevel(2)
-                                        .setStyle(
-                                            bdljsn::WriteStyle::e_COMPACT)
-                                        .setSortMembers(false);
+    }
+
+    // ACCESSORS
+
+    /// Print the specified `json` to the output stream.
+    inline void printJson(const bdljsn::Json& json) const
+    {
         const int rc = bdljsn::JsonUtil::write(os, json, opts);
         BSLS_ASSERT_SAFE(0 == rc);
         os << bsl::endl;
@@ -74,7 +100,7 @@ struct DomainsStatsConversionUtils {
             .makeNumber() = value;
     }
 
-    inline static void populateMetrics(bsl::ostream&             os,
+    inline static void populateMetrics(const JsonPrettyPrinter&  jsonPrinter,
                                        const bdljsn::Json&       parent,
                                        const bmqst::StatContext& ctx)
     {
@@ -140,10 +166,10 @@ struct DomainsStatsConversionUtils {
 
         populateMetric(&values, ctx, Stat::e_HISTORY_ABS);
 
-        PrintUtils::printJson(os, json);
+        jsonPrinter.printJson(json);
     }
 
-    inline static void populateOne(bsl::ostream&             os,
+    inline static void populateOne(const JsonPrettyPrinter&  jsonPrinter,
                                    const bdljsn::Json&       parent,
                                    const bmqst::StatContext& ctx)
     {
@@ -165,28 +191,26 @@ struct DomainsStatsConversionUtils {
                     bdljsn::Json jsonApp(parent, parent.allocator());
                     jsonApp.theObject().insert("app_id", appIdIt->name());
 
-                    populateMetrics(os, jsonApp, *appIdIt);
+                    populateMetrics(jsonPrinter, jsonApp, *appIdIt);
                 }
             }
             else {
-                populateMetrics(os, json, *queueIt);
+                populateMetrics(jsonPrinter, json, *queueIt);
             }
         }
     }
 
-    inline static void populateAll(bsl::ostream&             os,
+    inline static void populateAll(const JsonPrettyPrinter&  jsonPrinter,
                                    const bdljsn::Json&       parent,
                                    const bmqst::StatContext& ctx)
     {
-        // PRECONDITIONS
-
         for (bmqst::StatContextIterator domainIt = ctx.subcontextIterator();
              domainIt;
              ++domainIt) {
             bdljsn::Json json(parent, parent.allocator());
             json.theObject().insert("domain_name", domainIt->name());
 
-            populateOne(os, json, *domainIt);
+            populateOne(jsonPrinter, json, *domainIt);
         }
     }
 };
@@ -213,7 +237,7 @@ struct ClientStatsConversionUtils {
             .makeNumber() = value;
     }
 
-    inline static void populateMetrics(bsl::ostream&             os,
+    inline static void populateMetrics(const JsonPrettyPrinter&  jsonPrinter,
                                        const bdljsn::Json&       parent,
                                        const bmqst::StatContext& ctx)
     {
@@ -242,10 +266,10 @@ struct ClientStatsConversionUtils {
         populateMetric(&values, ctx, Stat::e_CONFIRM_DELTA);
         populateMetric(&values, ctx, Stat::e_CONFIRM_ABS);
 
-        PrintUtils::printJson(os, json);
+        jsonPrinter.printJson(json);
     }
 
-    inline static void populateOne(bsl::ostream&             os,
+    inline static void populateOne(const JsonPrettyPrinter&  jsonPrinter,
                                    const bdljsn::Json&       parent,
                                    const bmqst::StatContext& ctx)
     {
@@ -267,16 +291,16 @@ struct ClientStatsConversionUtils {
                     bdljsn::Json jsonApp(parent, parent.allocator());
                     jsonApp.theObject().insert("app_id", appIdIt->name());
 
-                    populateMetrics(os, jsonApp, *appIdIt);
+                    populateMetrics(jsonPrinter, jsonApp, *appIdIt);
                 }
             }
             else {
-                populateMetrics(os, json, *queueIt);
+                populateMetrics(jsonPrinter, json, *queueIt);
             }
         }
     }
 
-    inline static void populateAll(bsl::ostream&             os,
+    inline static void populateAll(const JsonPrettyPrinter&  jsonPrinter,
                                    const bdljsn::Json&       parent,
                                    const bmqst::StatContext& ctx)
     {
@@ -288,7 +312,7 @@ struct ClientStatsConversionUtils {
             bdljsn::Json json(parent, parent.allocator());
             json.theObject().insert("client_name", clientIt->name());
 
-            populateOne(os, json, *clientIt);
+            populateOne(jsonPrinter, json, *clientIt);
         }
     }
 };
@@ -315,9 +339,10 @@ struct ChannelStatsConversionUtils {
             .makeNumber() = value;
     }
 
-    inline static void populatePortMetrics(bsl::ostream&             os,
-                                           const bdljsn::Json&       parent,
-                                           const bmqst::StatContext& ctx)
+    inline static void
+    populatePortMetrics(const JsonPrettyPrinter&  jsonPrinter,
+                        const bdljsn::Json&       parent,
+                        const bmqst::StatContext& ctx)
     {
         if (ctx.numValues() == 0) {
             // Prefer to omit an empty "values" object
@@ -336,10 +361,10 @@ struct ChannelStatsConversionUtils {
         populateMetric(&values, ctx, Stat::e_CONNECTIONS_DELTA);
         populateMetric(&values, ctx, Stat::e_CONNECTIONS_ABS);
 
-        PrintUtils::printJson(os, json);
+        jsonPrinter.printJson(json);
     }
 
-    inline static void populatePort(bsl::ostream&             os,
+    inline static void populatePort(const JsonPrettyPrinter&  jsonPrinter,
                                     const bdljsn::Json&       parent,
                                     const bmqst::StatContext& ctx)
     {
@@ -350,11 +375,11 @@ struct ChannelStatsConversionUtils {
             bdljsn::Json json(parent, parent.allocator());
             json.theObject().insert("channel_name", xIt->name());
 
-            populatePortMetrics(os, json, *xIt);
+            populatePortMetrics(jsonPrinter, json, *xIt);
         }
     }
 
-    inline static void populateOne(bsl::ostream&             os,
+    inline static void populateOne(const JsonPrettyPrinter&  jsonPrinter,
                                    const bdljsn::Json&       parent,
                                    const bmqst::StatContext& ctx)
     {
@@ -368,11 +393,11 @@ struct ChannelStatsConversionUtils {
 
             bdljsn::Json json(parent, parent.allocator());
             json.theObject().insert("port_id", portItName);
-            populatePort(os, json, *portIt);
+            populatePort(jsonPrinter, json, *portIt);
         }
     }
 
-    inline static void populateAll(bsl::ostream&             os,
+    inline static void populateAll(const JsonPrettyPrinter&  jsonPrinter,
                                    const bdljsn::Json&       parent,
                                    const bmqst::StatContext& ctx)
     {
@@ -384,7 +409,7 @@ struct ChannelStatsConversionUtils {
             bdljsn::Json json(parent, parent.allocator());
             json.theObject().insert("channel_type", channelIt->name());
 
-            populateOne(os, json, *channelIt);
+            populateOne(jsonPrinter, json, *channelIt);
         }
     }
 };
@@ -491,7 +516,7 @@ struct AllocatorStatsConversionUtils {
         (*obj)[Stat::toString(metric)].makeNumber() = value;
     }
 
-    inline static void populateMetrics(bsl::ostream&             os,
+    inline static void populateMetrics(const JsonPrettyPrinter&  jsonPrinter,
                                        const bdljsn::Json&       parent,
                                        const bmqst::StatContext& ctx,
                                        const bsl::string&        key
@@ -515,22 +540,22 @@ struct AllocatorStatsConversionUtils {
         populateMetric(&values, ctx, Stat::e_NUM_DEALLOCATIONS);
         populateMetric(&values, ctx, Stat::e_NUM_DEALLOCATIONS_DELTA);
 
-        PrintUtils::printJson(os, json);
+        jsonPrinter.printJson(json);
     }
 
-    inline static void populateAll(bsl::ostream&             os,
+    inline static void populateAll(const JsonPrettyPrinter&  jsonPrinter,
                                    const bdljsn::Json&       parent,
                                    const bmqst::StatContext& ctx,
                                    const bsl::string&        key)
     {
-        populateMetrics(os, parent, ctx, key);
+        populateMetrics(jsonPrinter, parent, ctx, key);
 
         for (bmqst::StatContextIterator subIt = ctx.subcontextIterator();
              subIt;
              ++subIt) {
             bdljsn::Json json(parent, parent.allocator());
 
-            populateAll(os, json, *subIt, key + "_" + subIt->name());
+            populateAll(jsonPrinter, json, *subIt, subIt->name());
         }
     }
 };
@@ -644,7 +669,7 @@ JsonPrinter::JsonPrinterImpl::printStats(bsl::ostream&         os,
 {
     // executed by *StatController scheduler* thread
 
-    // PRECONDITIONS
+    JsonPrettyPrinter jpp(os, compact ? d_opsCompact : d_opsPretty);
 
     bdljsn::Json json(d_allocator_p);
     json.makeObject();
@@ -664,27 +689,27 @@ JsonPrinter::JsonPrinterImpl::printStats(bsl::ostream&         os,
         const bmqst::StatContext& ctx =
             *d_contexts.find("domainQueues")->second;
 
-        DomainsStatsConversionUtils::populateAll(os, json, ctx);
+        DomainsStatsConversionUtils::populateAll(jpp, json, ctx);
     }
     // Populate CLIENTS stats
     {
         const bmqst::StatContext& ctx = *d_contexts.find("clients")->second;
 
-        ClientStatsConversionUtils::populateAll(os, json, ctx);
+        ClientStatsConversionUtils::populateAll(jpp, json, ctx);
     }
     // Populate CLUSTERS stats
     {
         const bmqst::StatContext& ctx =
             *d_contexts.find("clusterNodes")->second;
 
-        ClientStatsConversionUtils::populateAll(os, json, ctx);
+        ClientStatsConversionUtils::populateAll(jpp, json, ctx);
     }
 
     // Populate TCP CHANNELS stats
     {
         const bmqst::StatContext& ctx = *d_contexts.find("channels")->second;
 
-        ChannelStatsConversionUtils::populateAll(os, json, ctx);
+        ChannelStatsConversionUtils::populateAll(jpp, json, ctx);
     }
 
     // Populate Allocators stats
@@ -694,18 +719,9 @@ JsonPrinter::JsonPrinterImpl::printStats(bsl::ostream&         os,
         if (it != d_contexts.end()) {
             const bmqst::StatContext& ctx = *it->second;
 
-            AllocatorStatsConversionUtils::populateAll(os, json, ctx, "");
+            AllocatorStatsConversionUtils::populateAll(jpp, json, ctx, "");
         }
     }
-
-    // TODO: respect write options
-
-    // const bdljsn::WriteOptions& ops = compact ? d_opsCompact : d_opsPretty;
-    // const int rc = bdljsn::JsonUtil::write(os, json, ops);
-    // if (0 != rc) {
-    //     BALL_LOG_ERROR << "Failed to encode stats JSON, rc = " << rc;
-    //     return rc;  // RETURN
-    // }
 
     return 0;
 }
