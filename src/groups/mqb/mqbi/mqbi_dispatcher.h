@@ -93,17 +93,13 @@
 /// Executors support
 ///-----------------
 // Implementations of the 'mqbi::Dispatcher' protocol are required to provide
-// two types of executors.  The first being an executor, available through the
-// dispatcher's 'executor' member function, to execute functors on a
-// dispatcher's processor.  The second being an executor, available through the
-// dispatcher's 'clientExecutor' member function, to execute functors, still in
-// a dispatcher's processor, but directly by a dispatcher's client.  Submitting
-// a functor via each of the executor's 'post' member functions shall be
-// functionally equivalent to dispatching an event of type 'e_DISPATCHER' and
-// 'e_CALLBACK' respectively.  The comparison of such executor objects and the
-// blocking behavior of their 'dispatch' member functions is implementation-
-// defined.  For more information about executors see the 'bmqex' package
-// documentation.
+// an executor, available through the dispatcher's 'executor' member function,
+// to execute functors on a dispatcher's processor.  Submitting a functor via
+// the executor's 'post' member functions shall be functionally equivalent to
+// dispatching an event of type 'e_DISPATCHER'.
+// The blocking behavior of the executor's 'dispatch' member functions is
+// implementation-defined.  For more information about executors see the
+// 'bmqex' package documentation.
 
 // MQB
 
@@ -127,6 +123,7 @@
 #include <bslma_allocator.h>
 #include <bslma_usesbslmaallocator.h>
 #include <bslmf_nestedtraitdeclaration.h>
+#include <bslmt_threadutil.h>
 #include <bsls_assert.h>
 #include <bsls_nullptr.h>
 
@@ -437,17 +434,6 @@ class Dispatcher {
     /// the specified `type`.
     virtual int numProcessors(DispatcherClientType::Enum type) const = 0;
 
-    /// Return whether the current thread is the dispatcher thread
-    /// associated to the specified `client`.  This is useful for
-    /// preconditions assert validation.
-    virtual bool inDispatcherThread(const DispatcherClient* client) const = 0;
-
-    /// Return whether the current thread is the dispatcher thread
-    /// associated to the specified dispatcher client `data`.  This is
-    /// useful for preconditions assert validation.
-    virtual bool
-    inDispatcherThread(const DispatcherClientData* data) const = 0;
-
     /// Return an executor object suitable for executing function objects on
     /// the processor in charge of the specified `client`.  The behavior is
     /// undefined unless the specified `client` is registered on this
@@ -457,18 +443,6 @@ class Dispatcher {
     /// after the specified `client` has been unregistered from this
     /// dispatcher.
     virtual bmqex::Executor executor(const DispatcherClient* client) const = 0;
-
-    /// Return an executor object suitable for executing function objects by
-    /// the specified `client` on the processor in charge of that client.
-    /// The behavior is undefined unless the specified `client` is
-    /// registered on this dispatcher and the client type is not
-    /// `e_UNDEFINED`.
-    ///
-    /// Note that submitting work on the returned executor is undefined
-    /// behavior if the specified `client` was unregistered from this
-    /// dispatcher.
-    virtual bmqex::Executor
-    clientExecutor(const mqbi::DispatcherClient* client) const = 0;
 };
 
 // ===============================
@@ -1141,23 +1115,20 @@ bsl::ostream& operator<<(bsl::ostream& stream, const DispatcherEvent& rhs);
 class DispatcherClientData {
   private:
     // DATA
+    /// Type of dispatcher client.
     DispatcherClientType::Enum d_clientType;
-    // Type of dispatcher client.
 
+    /// Processor handle to which the client is associated with.
     Dispatcher::ProcessorHandle d_processorHandle;
-    // Processor handle to which the client is
-    // associated with.
 
-    bool d_addedToFlushList;
-    // Flag indicating whether the dispatcher
-    // added the corresponding client to its
-    // internal flush list -- this is a
-    // Dispatcher internal member that should
-    // only be manipulated by the dispatcher, and
-    // not the clients.
-
+    /// The dispatcher associated with the client.
     Dispatcher* d_dispatcher_p;
-    // The dispatcher associated with the client.
+
+    /// The flag indicating whether the dispatcher have added the corresponding
+    /// client to its internal flush list -- this is a Dispatcher internal
+    /// member that should only be manipulated by the dispatcher, and not the
+    /// clients.
+    bool d_addedToFlushList;
 
   public:
     // CREATORS
@@ -1213,13 +1184,34 @@ bsl::ostream& operator<<(bsl::ostream&               stream,
 
 /// Interface for a client of the Dispatcher.
 class DispatcherClient {
+  private:
+    // DATA
+
+    /// The id of the thread this dispatcher client is assigned to.
+    bslmt::ThreadUtil::Id d_threadId;
+
   public:
+    // PUBLIC CONSTANTS
+    static const bslmt::ThreadUtil::Id k_ANY_THREAD_ID;
+
     // CREATORS
+    DispatcherClient()
+    : d_threadId(k_ANY_THREAD_ID)
+    {
+        // NOTHING
+    }
 
     /// Destructor.
     virtual ~DispatcherClient();
 
     // MANIPULATORS
+
+    /// @brief Assign thread id for this dispatcher client.
+    /// @param threadId to assign.
+    inline void setThreadId(bslmt::ThreadUtil::Id threadId)
+    {
+        d_threadId = threadId;
+    }
 
     /// Return a pointer to the dispatcher this client is associated with.
     virtual Dispatcher* dispatcher() = 0;
@@ -1247,6 +1239,16 @@ class DispatcherClient {
 
     /// Return a printable description of the client (e.g., for logging).
     virtual const bsl::string& description() const = 0;
+
+    /// Return whether the current thread is the thread this client is
+    /// associated with in dispatcher.
+    inline bool inDispatcherThread() const
+    {
+        // In most cases the following condition should short-circuit on
+        // the first operand:
+        return (d_threadId == bslmt::ThreadUtil::selfId()) ||
+               (d_threadId == k_ANY_THREAD_ID);
+    }
 };
 
 // FREE OPERATORS
@@ -1679,8 +1681,8 @@ inline const DispatcherReceiptEvent* DispatcherEvent::asReceiptEvent() const
 inline DispatcherClientData::DispatcherClientData()
 : d_clientType(DispatcherClientType::e_UNDEFINED)
 , d_processorHandle(Dispatcher::k_INVALID_PROCESSOR_HANDLE)
-, d_addedToFlushList(false)
 , d_dispatcher_p(0)
+, d_addedToFlushList(false)
 {
     // NOTHING
 }

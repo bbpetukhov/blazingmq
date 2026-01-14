@@ -1400,7 +1400,7 @@ int TCPSessionFactory::listen(const mqbcfg::TcpInterfaceListener& listener,
 
     bdlma::LocalSequentialAllocator<64> localAlloc(d_allocator_p);
     bmqu::MemOutStream                  endpoint(&localAlloc);
-    endpoint << ":" << port;  // Empty hostname, listen from all interfaces
+    endpoint << listener.address() << ":" << listener.port();
     bmqio::ListenOptions listenOptions;
     listenOptions.setEndpoint(endpoint.str());
 
@@ -1535,10 +1535,13 @@ bool TCPSessionFactory::isEndpointLoopback(const bslstl::StringRef& uri) const
 {
     bmqio::TCPEndpoint endpoint(uri);
 
+    if (!bmqio::ChannelUtil::isLocalHost(endpoint.host())) {
+        return false;
+    }
+
     // Use the original port specification method
     if (d_config.listeners().empty()) {
-        return (endpoint.port() == d_config.port()) &&
-               bmqio::ChannelUtil::isLocalHost(endpoint.host());
+        return endpoint.port() == d_config.port();
     }
 
     PortMatcher portMatcher(endpoint.port());
