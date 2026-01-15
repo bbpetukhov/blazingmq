@@ -112,6 +112,8 @@ struct DomainsStatsConversionUtils {
         bdljsn::Json        json(parent, parent.allocator());
         bdljsn::JsonObject& values = json.theObject();
 
+        values.insert("type", "domain");
+
         typedef mqbstat::QueueStatsDomain::Stat Stat;
 
         populateMetric(&values, ctx, Stat::e_NB_PRODUCER);
@@ -249,6 +251,8 @@ struct ClientStatsConversionUtils {
         bdljsn::Json        json(parent, parent.allocator());
         bdljsn::JsonObject& values = json.theObject();
 
+        values.insert("type", "client");
+
         typedef mqbstat::QueueStatsClient::Stat Stat;
 
         populateMetric(&values, ctx, Stat::e_PUT_MESSAGES_DELTA);
@@ -351,6 +355,8 @@ struct ChannelStatsConversionUtils {
 
         bdljsn::Json        json(parent, parent.allocator());
         bdljsn::JsonObject& values = json.theObject();
+
+        values.insert("type", "channel");
 
         typedef bmqio::StatChannelFactoryUtil::Stat Stat;
 
@@ -530,6 +536,7 @@ struct AllocatorStatsConversionUtils {
 
         bdljsn::Json        json(parent, parent.allocator());
         bdljsn::JsonObject& values = json.theObject();
+        values.insert("type", "allocator");
         values.insert("allocator_name", key);
 
         populateMetric(&values, ctx, Stat::e_NUM_ALLOCATED);
