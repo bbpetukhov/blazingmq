@@ -562,7 +562,9 @@ struct AllocatorStatsConversionUtils {
              ++subIt) {
             bdljsn::Json json(parent, parent.allocator());
 
-            populateAll(jsonPrinter, json, *subIt, subIt->name());
+            bsl::string subKey = key.empty() ? subIt->name()
+                                             : key + "." + subIt->name();
+            populateAll(jsonPrinter, json, *subIt, subKey);
         }
     }
 };
