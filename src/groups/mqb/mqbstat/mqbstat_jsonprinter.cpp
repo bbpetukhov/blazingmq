@@ -28,9 +28,13 @@
 #include <bmqst_statutil.h>
 
 // BDE
+#include <ball_context.h>
 #include <ball_log.h>
+#include <ball_logfilecleanerutil.h>
+#include <ball_recordstringformatter.h>
 #include <bdljsn_json.h>
 #include <bdljsn_jsonutil.h>
+#include <bdls_processutil.h>
 #include <bdlt_iso8601util.h>
 #include <bsls_assert.h>
 
@@ -38,6 +42,8 @@ namespace BloombergLP {
 namespace mqbstat {
 
 namespace {
+
+const char k_LOG_CATEGORY[] = "MQBSTAT.JSONPRINTER";
 
 // ----------------------------------
 // class JsonPrettyPrinter
@@ -670,6 +676,10 @@ inline JsonPrinter::JsonPrinterImpl::JsonPrinterImpl(
     // NOTHING
 }
 
+// -----------------
+// class JsonPrinter
+// -----------------
+
 inline int
 JsonPrinter::JsonPrinterImpl::printStats(bsl::ostream&         os,
                                          bool                  compact,
@@ -735,12 +745,15 @@ JsonPrinter::JsonPrinterImpl::printStats(bsl::ostream&         os,
     return 0;
 }
 
-// -----------------
-// class JsonPrinter
-// -----------------
-
-JsonPrinter::JsonPrinter(const StatContextsMap& statContextsMap,
-                         bslma::Allocator*      allocator)
+JsonPrinter::JsonPrinter(const mqbcfg::StatsConfig& config,
+                         bdlmt::EventScheduler*     eventScheduler,
+                         const StatContextsMap&     statContextsMap,
+                         bslma::Allocator*          allocator)
+: d_statContextsMap(statContextsMap)
+, d_statsLogFile(allocator)
+, d_config(config)
+, d_logfile_pattern(config.printer().file() + ".json")
+, d_statLogCleaner(eventScheduler, allocator)
 {
     bslma::Allocator* alloc = bslma::Default::allocator(allocator);
 
@@ -759,6 +772,81 @@ int JsonPrinter::printStats(bsl::ostream&         os,
     BSLS_ASSERT_SAFE(d_impl_mp);
 
     return d_impl_mp->printStats(os, compact, statsId, datetime);
+}
+
+void JsonPrinter::logStats(int lastStatId)
+{
+    // Dump to statslog file
+    // Prepare the log record and associated attributes
+    ball::Record            record;
+    ball::RecordAttributes& attributes = record.fixedFields();
+    bdlt::Datetime          now;
+    bdlt::EpochUtil::convertFromTimeT(&now, time(0));
+    attributes.setTimestamp(now);
+    attributes.setProcessID(bdls::ProcessUtil::getProcessId());
+    attributes.setThreadID(bslmt::ThreadUtil::selfIdAsUint64());
+    attributes.setFileName(__FILE__);
+    attributes.setLineNumber(__LINE__);
+    attributes.setCategory(k_LOG_CATEGORY);
+    attributes.setSeverity(ball::Severity::e_INFO);
+
+    // Dump stats into bmqbrkr.stats.log
+    attributes.clearMessage();
+    bsl::ostream os(&attributes.messageStreamBuf());
+    const bool   isCompact = false;
+    printStats(os, isCompact, lastStatId, now);
+
+    d_statsLogFile.publish(
+        record,
+        ball::Context(ball::Transmission::e_MANUAL_PUBLISH, 0, 1));
+}
+
+int JsonPrinter::start(BSLA_UNUSED bsl::ostream& errorDescription)
+{
+    // Setup the print of stats if configured for it
+    if (!isEnabled()) {
+        return 0;  // RETURN
+    }
+
+    // Configure the stats dump log file
+    d_statsLogFile.enableFileLogging(d_logfile_pattern.c_str());
+    d_statsLogFile.rotateOnSize(d_config.printer().rotateBytes() / 1024);
+    d_statsLogFile.rotateOnTimeInterval(
+        bdlt::DatetimeInterval(d_config.printer().rotateDays()));
+    d_statsLogFile.setLogFileFunctor(ball::RecordStringFormatter("%m\n"));
+    // Record's time is printed not through the record, but part of the
+    // 'id banner' (see 'onSnapshot').
+
+    // LogCleanup
+    if (d_config.printer().maxAgeDays() <= 0 ||
+        d_config.printer().file().empty()) {
+        BALL_LOG_INFO << "StatLogCleaning is *disabled* "
+                      << "[reason: either 'maxAgeDays' is set to 0 in config "
+                      << "or file pattern is empty]";
+        return 0;  // RETURN
+    }
+
+    bsl::string filePattern;
+    ball::LogFileCleanerUtil::logPatternToFilePattern(
+        &filePattern,
+        d_config.printer().file());
+    bsls::TimeInterval maxAge(0, 0);
+    maxAge.addDays(d_config.printer().maxAgeDays());
+
+    int rc = d_statLogCleaner.start(filePattern, maxAge);
+    if (rc != 0) {
+        BALL_LOG_ERROR << "#STATLOG_CLEANING "
+                       << "Failed to start log cleaning of '" << filePattern
+                       << "' [rc: " << rc << "]";
+    }
+
+    return 0;
+}
+
+void JsonPrinter::stop()
+{
+    // Stop the log cleaner
+    d_statLogCleaner.stop();
 }
 
 }  // close package namespace
