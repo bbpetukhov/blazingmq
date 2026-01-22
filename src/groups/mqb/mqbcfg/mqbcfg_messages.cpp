@@ -1,17 +1,3 @@
-// Copyright 2025 Bloomberg Finance L.P.
-// SPDX-License-Identifier: Apache-2.0
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 // mqbcfg_messages.cpp            *DO NOT EDIT*            @generated -*-C++-*-
 
 #include <mqbcfg_messages.h>
@@ -486,13 +472,11 @@ Credential::Credential(bslma::Allocator* basicAllocator)
 Credential::Credential(const Credential& original,
                        bslma::Allocator* basicAllocator)
 : d_mechanism(original.d_mechanism, basicAllocator)
-, d_identity(original.d_identity, basicAllocator)
-{
-}
+, d_identity(original.d_identity, basicAllocator){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-Credential::Credential(Credential&& original) noexcept
+Credential::Credential(Credential && original) noexcept
 : d_mechanism(bsl::move(original.d_mechanism)),
   d_identity(bsl::move(original.d_identity))
 {
@@ -1108,13 +1092,11 @@ LogDumpConfig::LogDumpConfig(const LogDumpConfig& original,
                              bslma::Allocator*    basicAllocator)
 : d_recordingLevel(original.d_recordingLevel, basicAllocator)
 , d_triggerLevel(original.d_triggerLevel, basicAllocator)
-, d_recordBufferSize(original.d_recordBufferSize)
-{
-}
+, d_recordBufferSize(original.d_recordBufferSize){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-LogDumpConfig::LogDumpConfig(LogDumpConfig&& original) noexcept
+LogDumpConfig::LogDumpConfig(LogDumpConfig && original) noexcept
 : d_recordingLevel(bsl::move(original.d_recordingLevel)),
   d_triggerLevel(bsl::move(original.d_triggerLevel)),
   d_recordBufferSize(bsl::move(original.d_recordBufferSize))
@@ -2008,13 +1990,11 @@ Plugins::Plugins(bslma::Allocator* basicAllocator)
 
 Plugins::Plugins(const Plugins& original, bslma::Allocator* basicAllocator)
 : d_libraries(original.d_libraries, basicAllocator)
-, d_enabled(original.d_enabled, basicAllocator)
-{
-}
+, d_enabled(original.d_enabled, basicAllocator){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-Plugins::Plugins(Plugins&& original) noexcept
+Plugins::Plugins(Plugins && original) noexcept
 : d_libraries(bsl::move(original.d_libraries)),
   d_enabled(bsl::move(original.d_enabled))
 {
@@ -2351,13 +2331,11 @@ ResolvedDomain::ResolvedDomain(bslma::Allocator* basicAllocator)
 ResolvedDomain::ResolvedDomain(const ResolvedDomain& original,
                                bslma::Allocator*     basicAllocator)
 : d_resolvedName(original.d_resolvedName, basicAllocator)
-, d_clusterName(original.d_clusterName, basicAllocator)
-{
-}
+, d_clusterName(original.d_clusterName, basicAllocator){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-ResolvedDomain::ResolvedDomain(ResolvedDomain&& original) noexcept
+ResolvedDomain::ResolvedDomain(ResolvedDomain && original) noexcept
 : d_resolvedName(bsl::move(original.d_resolvedName)),
   d_clusterName(bsl::move(original.d_clusterName))
 {
@@ -2420,184 +2398,82 @@ bsl::ostream& ResolvedDomain::print(bsl::ostream& stream,
     return stream;
 }
 
-// ------------------------
-// class StatsPrinterConfig
-// ------------------------
+// --------------------------------
+// class StatsPrinterEncodingFormat
+// --------------------------------
 
 // CONSTANTS
 
-const char StatsPrinterConfig::CLASS_NAME[] = "StatsPrinterConfig";
+const char StatsPrinterEncodingFormat::CLASS_NAME[] =
+    "StatsPrinterEncodingFormat";
 
-const int StatsPrinterConfig::DEFAULT_INITIALIZER_PRINT_INTERVAL = 60;
-
-const int StatsPrinterConfig::DEFAULT_INITIALIZER_ROTATE_BYTES = 268435456;
-
-const int StatsPrinterConfig::DEFAULT_INITIALIZER_ROTATE_DAYS = 1;
-
-const bdlat_AttributeInfo StatsPrinterConfig::ATTRIBUTE_INFO_ARRAY[] = {
-    {ATTRIBUTE_ID_PRINT_INTERVAL,
-     "printInterval",
-     sizeof("printInterval") - 1,
-     "",
-     bdlat_FormattingMode::e_DEC | bdlat_FormattingMode::e_DEFAULT_VALUE},
-    {ATTRIBUTE_ID_FILE,
-     "file",
-     sizeof("file") - 1,
-     "",
-     bdlat_FormattingMode::e_TEXT},
-    {ATTRIBUTE_ID_MAX_AGE_DAYS,
-     "maxAgeDays",
-     sizeof("maxAgeDays") - 1,
-     "",
-     bdlat_FormattingMode::e_DEC},
-    {ATTRIBUTE_ID_ROTATE_BYTES,
-     "rotateBytes",
-     sizeof("rotateBytes") - 1,
-     "",
-     bdlat_FormattingMode::e_DEC | bdlat_FormattingMode::e_DEFAULT_VALUE},
-    {ATTRIBUTE_ID_ROTATE_DAYS,
-     "rotateDays",
-     sizeof("rotateDays") - 1,
-     "",
-     bdlat_FormattingMode::e_DEC | bdlat_FormattingMode::e_DEFAULT_VALUE}};
+const bdlat_EnumeratorInfo
+    StatsPrinterEncodingFormat::ENUMERATOR_INFO_ARRAY[] = {
+        {StatsPrinterEncodingFormat::NONE, "NONE", sizeof("NONE") - 1, ""},
+        {StatsPrinterEncodingFormat::TABLE, "TABLE", sizeof("TABLE") - 1, ""},
+        {StatsPrinterEncodingFormat::JSON, "JSON", sizeof("JSON") - 1, ""},
+        {StatsPrinterEncodingFormat::TABLE_AND_JSON,
+         "TABLE_AND_JSON",
+         sizeof("TABLE_AND_JSON") - 1,
+         ""}};
 
 // CLASS METHODS
 
-const bdlat_AttributeInfo*
-StatsPrinterConfig::lookupAttributeInfo(const char* name, int nameLength)
+int StatsPrinterEncodingFormat::fromInt(
+    StatsPrinterEncodingFormat::Value* result,
+    int                                number)
 {
-    for (int i = 0; i < 5; ++i) {
-        const bdlat_AttributeInfo& attributeInfo =
-            StatsPrinterConfig::ATTRIBUTE_INFO_ARRAY[i];
+    switch (number) {
+    case StatsPrinterEncodingFormat::NONE:
+    case StatsPrinterEncodingFormat::TABLE:
+    case StatsPrinterEncodingFormat::JSON:
+    case StatsPrinterEncodingFormat::TABLE_AND_JSON:
+        *result = static_cast<StatsPrinterEncodingFormat::Value>(number);
+        return 0;
+    default: return -1;
+    }
+}
 
-        if (nameLength == attributeInfo.d_nameLength &&
-            0 == bsl::memcmp(attributeInfo.d_name_p, name, nameLength)) {
-            return &attributeInfo;
+int StatsPrinterEncodingFormat::fromString(
+    StatsPrinterEncodingFormat::Value* result,
+    const char*                        string,
+    int                                stringLength)
+{
+    for (int i = 0; i < 4; ++i) {
+        const bdlat_EnumeratorInfo& enumeratorInfo =
+            StatsPrinterEncodingFormat::ENUMERATOR_INFO_ARRAY[i];
+
+        if (stringLength == enumeratorInfo.d_nameLength &&
+            0 == bsl::memcmp(enumeratorInfo.d_name_p, string, stringLength)) {
+            *result = static_cast<StatsPrinterEncodingFormat::Value>(
+                enumeratorInfo.d_value);
+            return 0;
         }
     }
 
+    return -1;
+}
+
+const char*
+StatsPrinterEncodingFormat::toString(StatsPrinterEncodingFormat::Value value)
+{
+    switch (value) {
+    case NONE: {
+        return "NONE";
+    }
+    case TABLE: {
+        return "TABLE";
+    }
+    case JSON: {
+        return "JSON";
+    }
+    case TABLE_AND_JSON: {
+        return "TABLE_AND_JSON";
+    }
+    }
+
+    BSLS_ASSERT(!"invalid enumerator");
     return 0;
-}
-
-const bdlat_AttributeInfo* StatsPrinterConfig::lookupAttributeInfo(int id)
-{
-    switch (id) {
-    case ATTRIBUTE_ID_PRINT_INTERVAL:
-        return &ATTRIBUTE_INFO_ARRAY[ATTRIBUTE_INDEX_PRINT_INTERVAL];
-    case ATTRIBUTE_ID_FILE: return &ATTRIBUTE_INFO_ARRAY[ATTRIBUTE_INDEX_FILE];
-    case ATTRIBUTE_ID_MAX_AGE_DAYS:
-        return &ATTRIBUTE_INFO_ARRAY[ATTRIBUTE_INDEX_MAX_AGE_DAYS];
-    case ATTRIBUTE_ID_ROTATE_BYTES:
-        return &ATTRIBUTE_INFO_ARRAY[ATTRIBUTE_INDEX_ROTATE_BYTES];
-    case ATTRIBUTE_ID_ROTATE_DAYS:
-        return &ATTRIBUTE_INFO_ARRAY[ATTRIBUTE_INDEX_ROTATE_DAYS];
-    default: return 0;
-    }
-}
-
-// CREATORS
-
-StatsPrinterConfig::StatsPrinterConfig(bslma::Allocator* basicAllocator)
-: d_file(basicAllocator)
-, d_printInterval(DEFAULT_INITIALIZER_PRINT_INTERVAL)
-, d_maxAgeDays()
-, d_rotateBytes(DEFAULT_INITIALIZER_ROTATE_BYTES)
-, d_rotateDays(DEFAULT_INITIALIZER_ROTATE_DAYS)
-{
-}
-
-StatsPrinterConfig::StatsPrinterConfig(const StatsPrinterConfig& original,
-                                       bslma::Allocator* basicAllocator)
-: d_file(original.d_file, basicAllocator)
-, d_printInterval(original.d_printInterval)
-, d_maxAgeDays(original.d_maxAgeDays)
-, d_rotateBytes(original.d_rotateBytes)
-, d_rotateDays(original.d_rotateDays)
-{
-}
-
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
-    defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-StatsPrinterConfig::StatsPrinterConfig(StatsPrinterConfig&& original) noexcept
-: d_file(bsl::move(original.d_file)),
-  d_printInterval(bsl::move(original.d_printInterval)),
-  d_maxAgeDays(bsl::move(original.d_maxAgeDays)),
-  d_rotateBytes(bsl::move(original.d_rotateBytes)),
-  d_rotateDays(bsl::move(original.d_rotateDays))
-{
-}
-
-StatsPrinterConfig::StatsPrinterConfig(StatsPrinterConfig&& original,
-                                       bslma::Allocator*    basicAllocator)
-: d_file(bsl::move(original.d_file), basicAllocator)
-, d_printInterval(bsl::move(original.d_printInterval))
-, d_maxAgeDays(bsl::move(original.d_maxAgeDays))
-, d_rotateBytes(bsl::move(original.d_rotateBytes))
-, d_rotateDays(bsl::move(original.d_rotateDays))
-{
-}
-#endif
-
-StatsPrinterConfig::~StatsPrinterConfig()
-{
-}
-
-// MANIPULATORS
-
-StatsPrinterConfig&
-StatsPrinterConfig::operator=(const StatsPrinterConfig& rhs)
-{
-    if (this != &rhs) {
-        d_printInterval = rhs.d_printInterval;
-        d_file          = rhs.d_file;
-        d_maxAgeDays    = rhs.d_maxAgeDays;
-        d_rotateBytes   = rhs.d_rotateBytes;
-        d_rotateDays    = rhs.d_rotateDays;
-    }
-
-    return *this;
-}
-
-#if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
-    defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-StatsPrinterConfig& StatsPrinterConfig::operator=(StatsPrinterConfig&& rhs)
-{
-    if (this != &rhs) {
-        d_printInterval = bsl::move(rhs.d_printInterval);
-        d_file          = bsl::move(rhs.d_file);
-        d_maxAgeDays    = bsl::move(rhs.d_maxAgeDays);
-        d_rotateBytes   = bsl::move(rhs.d_rotateBytes);
-        d_rotateDays    = bsl::move(rhs.d_rotateDays);
-    }
-
-    return *this;
-}
-#endif
-
-void StatsPrinterConfig::reset()
-{
-    d_printInterval = DEFAULT_INITIALIZER_PRINT_INTERVAL;
-    bdlat_ValueTypeFunctions::reset(&d_file);
-    bdlat_ValueTypeFunctions::reset(&d_maxAgeDays);
-    d_rotateBytes = DEFAULT_INITIALIZER_ROTATE_BYTES;
-    d_rotateDays  = DEFAULT_INITIALIZER_ROTATE_DAYS;
-}
-
-// ACCESSORS
-
-bsl::ostream& StatsPrinterConfig::print(bsl::ostream& stream,
-                                        int           level,
-                                        int           spacesPerLevel) const
-{
-    bslim::Printer printer(&stream, level, spacesPerLevel);
-    printer.start();
-    printer.printAttribute("printInterval", this->printInterval());
-    printer.printAttribute("file", this->file());
-    printer.printAttribute("maxAgeDays", this->maxAgeDays());
-    printer.printAttribute("rotateBytes", this->rotateBytes());
-    printer.printAttribute("rotateDays", this->rotateDays());
-    printer.end();
-    return stream;
 }
 
 // -----------------------
@@ -2879,13 +2755,11 @@ SyslogConfig::SyslogConfig(const SyslogConfig& original,
 : d_appName(original.d_appName, basicAllocator)
 , d_logFormat(original.d_logFormat, basicAllocator)
 , d_verbosity(original.d_verbosity, basicAllocator)
-, d_enabled(original.d_enabled)
-{
-}
+, d_enabled(original.d_enabled){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-SyslogConfig::SyslogConfig(SyslogConfig&& original) noexcept
+SyslogConfig::SyslogConfig(SyslogConfig && original) noexcept
 : d_appName(bsl::move(original.d_appName)),
   d_logFormat(bsl::move(original.d_logFormat)),
   d_verbosity(bsl::move(original.d_verbosity)),
@@ -3013,14 +2887,12 @@ TcpClusterNodeConnection::TcpClusterNodeConnection(
 TcpClusterNodeConnection::TcpClusterNodeConnection(
     const TcpClusterNodeConnection& original,
     bslma::Allocator*               basicAllocator)
-: d_endpoint(original.d_endpoint, basicAllocator)
-{
-}
+: d_endpoint(original.d_endpoint, basicAllocator){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-TcpClusterNodeConnection::TcpClusterNodeConnection(
-    TcpClusterNodeConnection&& original) noexcept
+TcpClusterNodeConnection::TcpClusterNodeConnection(TcpClusterNodeConnection &&
+                                                   original) noexcept
 : d_endpoint(bsl::move(original.d_endpoint))
 {
 }
@@ -3150,16 +3022,15 @@ TcpInterfaceListener::TcpInterfaceListener(
     bslma::Allocator*           basicAllocator)
 : d_name(original.d_name, basicAllocator)
 , d_address(original.d_address, basicAllocator)
-, d_port(original.d_port)
-{
-}
+, d_port(original.d_port){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-TcpInterfaceListener::TcpInterfaceListener(TcpInterfaceListener&& original)
-    noexcept : d_name(bsl::move(original.d_name)),
-               d_address(bsl::move(original.d_address)),
-               d_port(bsl::move(original.d_port))
+TcpInterfaceListener::TcpInterfaceListener(TcpInterfaceListener &&
+                                           original) noexcept
+: d_name(bsl::move(original.d_name)),
+  d_address(bsl::move(original.d_address)),
+  d_port(bsl::move(original.d_port))
 {
 }
 
@@ -3291,14 +3162,12 @@ VirtualClusterInformation::VirtualClusterInformation(
     const VirtualClusterInformation& original,
     bslma::Allocator*                basicAllocator)
 : d_name(original.d_name, basicAllocator)
-, d_selfNodeId(original.d_selfNodeId)
-{
-}
+, d_selfNodeId(original.d_selfNodeId){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
 VirtualClusterInformation::VirtualClusterInformation(
-    VirtualClusterInformation&& original) noexcept
+    VirtualClusterInformation && original) noexcept
 : d_name(bsl::move(original.d_name)),
   d_selfNodeId(bsl::move(original.d_selfNodeId))
 {
@@ -4158,13 +4027,11 @@ LogController::LogController(const LogController& original,
 , d_syslog(original.d_syslog, basicAllocator)
 , d_logDump(original.d_logDump, basicAllocator)
 , d_fileMaxAgeDays(original.d_fileMaxAgeDays)
-, d_rotationBytes(original.d_rotationBytes)
-{
-}
+, d_rotationBytes(original.d_rotationBytes){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-LogController::LogController(LogController&& original) noexcept
+LogController::LogController(LogController && original) noexcept
 : d_categories(bsl::move(original.d_categories)),
   d_fileName(bsl::move(original.d_fileName)),
   d_logfileFormat(bsl::move(original.d_logfileFormat)),
@@ -4444,13 +4311,11 @@ PartitionConfig::PartitionConfig(const PartitionConfig& original,
 , d_maxArchivedFileSets(original.d_maxArchivedFileSets)
 , d_preallocate(original.d_preallocate)
 , d_prefaultPages(original.d_prefaultPages)
-, d_flushAtShutdown(original.d_flushAtShutdown)
-{
-}
+, d_flushAtShutdown(original.d_flushAtShutdown){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-PartitionConfig::PartitionConfig(PartitionConfig&& original) noexcept
+PartitionConfig::PartitionConfig(PartitionConfig && original) noexcept
 : d_maxDataFileSize(bsl::move(original.d_maxDataFileSize)),
   d_maxJournalFileSize(bsl::move(original.d_maxJournalFileSize)),
   d_maxQlistFileSize(bsl::move(original.d_maxQlistFileSize)),
@@ -4633,15 +4498,14 @@ PluginSettingKeyValue::PluginSettingKeyValue(
     const PluginSettingKeyValue& original,
     bslma::Allocator*            basicAllocator)
 : d_key(original.d_key, basicAllocator)
-, d_value(original.d_value, basicAllocator)
-{
-}
+, d_value(original.d_value, basicAllocator){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-PluginSettingKeyValue::PluginSettingKeyValue(PluginSettingKeyValue&& original)
-    noexcept : d_key(bsl::move(original.d_key)),
-               d_value(bsl::move(original.d_value))
+PluginSettingKeyValue::PluginSettingKeyValue(PluginSettingKeyValue &&
+                                             original) noexcept
+: d_key(bsl::move(original.d_key)),
+  d_value(bsl::move(original.d_value))
 {
 }
 
@@ -4783,14 +4647,12 @@ StatPluginConfigPrometheus::StatPluginConfigPrometheus(
     bslma::Allocator*                 basicAllocator)
 : d_host(original.d_host, basicAllocator)
 , d_port(original.d_port)
-, d_mode(original.d_mode)
-{
-}
+, d_mode(original.d_mode){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
 StatPluginConfigPrometheus::StatPluginConfigPrometheus(
-    StatPluginConfigPrometheus&& original) noexcept
+    StatPluginConfigPrometheus && original) noexcept
 : d_host(bsl::move(original.d_host)),
   d_port(bsl::move(original.d_port)),
   d_mode(bsl::move(original.d_mode))
@@ -4858,6 +4720,203 @@ bsl::ostream& StatPluginConfigPrometheus::print(bsl::ostream& stream,
     printer.printAttribute("mode", this->mode());
     printer.printAttribute("host", this->host());
     printer.printAttribute("port", this->port());
+    printer.end();
+    return stream;
+}
+
+// ------------------------
+// class StatsPrinterConfig
+// ------------------------
+
+// CONSTANTS
+
+const char StatsPrinterConfig::CLASS_NAME[] = "StatsPrinterConfig";
+
+const int StatsPrinterConfig::DEFAULT_INITIALIZER_PRINT_INTERVAL = 60;
+
+const int StatsPrinterConfig::DEFAULT_INITIALIZER_ROTATE_BYTES = 268435456;
+
+const int StatsPrinterConfig::DEFAULT_INITIALIZER_ROTATE_DAYS = 1;
+
+const StatsPrinterEncodingFormat::Value
+    StatsPrinterConfig::DEFAULT_INITIALIZER_ENCODING =
+        StatsPrinterEncodingFormat::TABLE_AND_JSON;
+
+const bdlat_AttributeInfo StatsPrinterConfig::ATTRIBUTE_INFO_ARRAY[] = {
+    {ATTRIBUTE_ID_PRINT_INTERVAL,
+     "printInterval",
+     sizeof("printInterval") - 1,
+     "",
+     bdlat_FormattingMode::e_DEC | bdlat_FormattingMode::e_DEFAULT_VALUE},
+    {ATTRIBUTE_ID_FILE,
+     "file",
+     sizeof("file") - 1,
+     "",
+     bdlat_FormattingMode::e_TEXT},
+    {ATTRIBUTE_ID_MAX_AGE_DAYS,
+     "maxAgeDays",
+     sizeof("maxAgeDays") - 1,
+     "",
+     bdlat_FormattingMode::e_DEC},
+    {ATTRIBUTE_ID_ROTATE_BYTES,
+     "rotateBytes",
+     sizeof("rotateBytes") - 1,
+     "",
+     bdlat_FormattingMode::e_DEC | bdlat_FormattingMode::e_DEFAULT_VALUE},
+    {ATTRIBUTE_ID_ROTATE_DAYS,
+     "rotateDays",
+     sizeof("rotateDays") - 1,
+     "",
+     bdlat_FormattingMode::e_DEC | bdlat_FormattingMode::e_DEFAULT_VALUE},
+    {ATTRIBUTE_ID_ENCODING,
+     "encoding",
+     sizeof("encoding") - 1,
+     "",
+     bdlat_FormattingMode::e_DEFAULT | bdlat_FormattingMode::e_DEFAULT_VALUE}};
+
+// CLASS METHODS
+
+const bdlat_AttributeInfo*
+StatsPrinterConfig::lookupAttributeInfo(const char* name, int nameLength)
+{
+    for (int i = 0; i < 6; ++i) {
+        const bdlat_AttributeInfo& attributeInfo =
+            StatsPrinterConfig::ATTRIBUTE_INFO_ARRAY[i];
+
+        if (nameLength == attributeInfo.d_nameLength &&
+            0 == bsl::memcmp(attributeInfo.d_name_p, name, nameLength)) {
+            return &attributeInfo;
+        }
+    }
+
+    return 0;
+}
+
+const bdlat_AttributeInfo* StatsPrinterConfig::lookupAttributeInfo(int id)
+{
+    switch (id) {
+    case ATTRIBUTE_ID_PRINT_INTERVAL:
+        return &ATTRIBUTE_INFO_ARRAY[ATTRIBUTE_INDEX_PRINT_INTERVAL];
+    case ATTRIBUTE_ID_FILE: return &ATTRIBUTE_INFO_ARRAY[ATTRIBUTE_INDEX_FILE];
+    case ATTRIBUTE_ID_MAX_AGE_DAYS:
+        return &ATTRIBUTE_INFO_ARRAY[ATTRIBUTE_INDEX_MAX_AGE_DAYS];
+    case ATTRIBUTE_ID_ROTATE_BYTES:
+        return &ATTRIBUTE_INFO_ARRAY[ATTRIBUTE_INDEX_ROTATE_BYTES];
+    case ATTRIBUTE_ID_ROTATE_DAYS:
+        return &ATTRIBUTE_INFO_ARRAY[ATTRIBUTE_INDEX_ROTATE_DAYS];
+    case ATTRIBUTE_ID_ENCODING:
+        return &ATTRIBUTE_INFO_ARRAY[ATTRIBUTE_INDEX_ENCODING];
+    default: return 0;
+    }
+}
+
+// CREATORS
+
+StatsPrinterConfig::StatsPrinterConfig(bslma::Allocator* basicAllocator)
+: d_file(basicAllocator)
+, d_printInterval(DEFAULT_INITIALIZER_PRINT_INTERVAL)
+, d_maxAgeDays()
+, d_rotateBytes(DEFAULT_INITIALIZER_ROTATE_BYTES)
+, d_rotateDays(DEFAULT_INITIALIZER_ROTATE_DAYS)
+, d_encoding(DEFAULT_INITIALIZER_ENCODING)
+{
+}
+
+StatsPrinterConfig::StatsPrinterConfig(const StatsPrinterConfig& original,
+                                       bslma::Allocator* basicAllocator)
+: d_file(original.d_file, basicAllocator)
+, d_printInterval(original.d_printInterval)
+, d_maxAgeDays(original.d_maxAgeDays)
+, d_rotateBytes(original.d_rotateBytes)
+, d_rotateDays(original.d_rotateDays)
+, d_encoding(original.d_encoding){}
+
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
+    defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
+StatsPrinterConfig::StatsPrinterConfig(StatsPrinterConfig && original) noexcept
+: d_file(bsl::move(original.d_file)),
+  d_printInterval(bsl::move(original.d_printInterval)),
+  d_maxAgeDays(bsl::move(original.d_maxAgeDays)),
+  d_rotateBytes(bsl::move(original.d_rotateBytes)),
+  d_rotateDays(bsl::move(original.d_rotateDays)),
+  d_encoding(bsl::move(original.d_encoding))
+{
+}
+
+StatsPrinterConfig::StatsPrinterConfig(StatsPrinterConfig&& original,
+                                       bslma::Allocator*    basicAllocator)
+: d_file(bsl::move(original.d_file), basicAllocator)
+, d_printInterval(bsl::move(original.d_printInterval))
+, d_maxAgeDays(bsl::move(original.d_maxAgeDays))
+, d_rotateBytes(bsl::move(original.d_rotateBytes))
+, d_rotateDays(bsl::move(original.d_rotateDays))
+, d_encoding(bsl::move(original.d_encoding))
+{
+}
+#endif
+
+StatsPrinterConfig::~StatsPrinterConfig()
+{
+}
+
+// MANIPULATORS
+
+StatsPrinterConfig&
+StatsPrinterConfig::operator=(const StatsPrinterConfig& rhs)
+{
+    if (this != &rhs) {
+        d_printInterval = rhs.d_printInterval;
+        d_file          = rhs.d_file;
+        d_maxAgeDays    = rhs.d_maxAgeDays;
+        d_rotateBytes   = rhs.d_rotateBytes;
+        d_rotateDays    = rhs.d_rotateDays;
+        d_encoding      = rhs.d_encoding;
+    }
+
+    return *this;
+}
+
+#if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
+    defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
+StatsPrinterConfig& StatsPrinterConfig::operator=(StatsPrinterConfig&& rhs)
+{
+    if (this != &rhs) {
+        d_printInterval = bsl::move(rhs.d_printInterval);
+        d_file          = bsl::move(rhs.d_file);
+        d_maxAgeDays    = bsl::move(rhs.d_maxAgeDays);
+        d_rotateBytes   = bsl::move(rhs.d_rotateBytes);
+        d_rotateDays    = bsl::move(rhs.d_rotateDays);
+        d_encoding      = bsl::move(rhs.d_encoding);
+    }
+
+    return *this;
+}
+#endif
+
+void StatsPrinterConfig::reset()
+{
+    d_printInterval = DEFAULT_INITIALIZER_PRINT_INTERVAL;
+    bdlat_ValueTypeFunctions::reset(&d_file);
+    bdlat_ValueTypeFunctions::reset(&d_maxAgeDays);
+    d_rotateBytes = DEFAULT_INITIALIZER_ROTATE_BYTES;
+    d_rotateDays  = DEFAULT_INITIALIZER_ROTATE_DAYS;
+    d_encoding    = DEFAULT_INITIALIZER_ENCODING;
+}
+
+// ACCESSORS
+
+bsl::ostream& StatsPrinterConfig::print(bsl::ostream& stream,
+                                        int           level,
+                                        int           spacesPerLevel) const
+{
+    bslim::Printer printer(&stream, level, spacesPerLevel);
+    printer.start();
+    printer.printAttribute("printInterval", this->printInterval());
+    printer.printAttribute("file", this->file());
+    printer.printAttribute("maxAgeDays", this->maxAgeDays());
+    printer.printAttribute("rotateBytes", this->rotateBytes());
+    printer.printAttribute("rotateDays", this->rotateDays());
+    printer.printAttribute("encoding", this->encoding());
     printer.end();
     return stream;
 }
@@ -5002,13 +5061,11 @@ TcpInterfaceConfig::TcpInterfaceConfig(const TcpInterfaceConfig& original,
 , d_port(original.d_port)
 , d_ioThreads(original.d_ioThreads)
 , d_maxConnections(original.d_maxConnections)
-, d_heartbeatIntervalMs(original.d_heartbeatIntervalMs)
-{
-}
+, d_heartbeatIntervalMs(original.d_heartbeatIntervalMs){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-TcpInterfaceConfig::TcpInterfaceConfig(TcpInterfaceConfig&& original) noexcept
+TcpInterfaceConfig::TcpInterfaceConfig(TcpInterfaceConfig && original) noexcept
 : d_lowWatermark(bsl::move(original.d_lowWatermark)),
   d_highWatermark(bsl::move(original.d_highWatermark)),
   d_nodeLowWatermark(bsl::move(original.d_nodeLowWatermark)),
@@ -5184,14 +5241,12 @@ AuthenticatorPluginConfig::AuthenticatorPluginConfig(
     const AuthenticatorPluginConfig& original,
     bslma::Allocator*                basicAllocator)
 : d_settings(original.d_settings, basicAllocator)
-, d_name(original.d_name, basicAllocator)
-{
-}
+, d_name(original.d_name, basicAllocator){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
 AuthenticatorPluginConfig::AuthenticatorPluginConfig(
-    AuthenticatorPluginConfig&& original) noexcept
+    AuthenticatorPluginConfig && original) noexcept
 : d_settings(bsl::move(original.d_settings)),
   d_name(bsl::move(original.d_name))
 {
@@ -5329,13 +5384,11 @@ ClusterNode::ClusterNode(const ClusterNode& original,
 : d_name(original.d_name, basicAllocator)
 , d_dataCenter(original.d_dataCenter, basicAllocator)
 , d_transport(original.d_transport, basicAllocator)
-, d_id(original.d_id)
-{
-}
+, d_id(original.d_id){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-ClusterNode::ClusterNode(ClusterNode&& original) noexcept
+ClusterNode::ClusterNode(ClusterNode && original) noexcept
 : d_name(bsl::move(original.d_name)),
   d_dataCenter(bsl::move(original.d_dataCenter)),
   d_transport(bsl::move(original.d_transport)),
@@ -5558,13 +5611,11 @@ NetworkInterfaces::NetworkInterfaces(bslma::Allocator* basicAllocator)
 NetworkInterfaces::NetworkInterfaces(const NetworkInterfaces& original,
                                      bslma::Allocator*        basicAllocator)
 : d_tcpInterface(original.d_tcpInterface, basicAllocator)
-, d_heartbeats(original.d_heartbeats)
-{
-}
+, d_heartbeats(original.d_heartbeats){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-NetworkInterfaces::NetworkInterfaces(NetworkInterfaces&& original) noexcept
+NetworkInterfaces::NetworkInterfaces(NetworkInterfaces && original) noexcept
 : d_tcpInterface(bsl::move(original.d_tcpInterface)),
   d_heartbeats(bsl::move(original.d_heartbeats))
 {
@@ -5763,13 +5814,11 @@ StatPluginConfig::StatPluginConfig(const StatPluginConfig& original,
 , d_queueSize(original.d_queueSize)
 , d_queueHighWatermark(original.d_queueHighWatermark)
 , d_queueLowWatermark(original.d_queueLowWatermark)
-, d_publishInterval(original.d_publishInterval)
-{
-}
+, d_publishInterval(original.d_publishInterval){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-StatPluginConfig::StatPluginConfig(StatPluginConfig&& original) noexcept
+StatPluginConfig::StatPluginConfig(StatPluginConfig && original) noexcept
 : d_hosts(bsl::move(original.d_hosts)),
   d_name(bsl::move(original.d_name)),
   d_namespacePrefix(bsl::move(original.d_namespacePrefix)),
@@ -5944,13 +5993,11 @@ TaskConfig::TaskConfig(const TaskConfig& original,
                        bslma::Allocator* basicAllocator)
 : d_allocationLimit(original.d_allocationLimit)
 , d_logController(original.d_logController, basicAllocator)
-, d_allocatorType(original.d_allocatorType)
-{
-}
+, d_allocatorType(original.d_allocatorType){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-TaskConfig::TaskConfig(TaskConfig&& original) noexcept
+TaskConfig::TaskConfig(TaskConfig && original) noexcept
 : d_allocationLimit(bsl::move(original.d_allocationLimit)),
   d_logController(bsl::move(original.d_logController)),
   d_allocatorType(bsl::move(original.d_allocatorType))
@@ -6077,15 +6124,14 @@ AuthenticatorConfig::AuthenticatorConfig(bslma::Allocator* basicAllocator)
 AuthenticatorConfig::AuthenticatorConfig(const AuthenticatorConfig& original,
                                          bslma::Allocator* basicAllocator)
 : d_authenticators(original.d_authenticators, basicAllocator)
-, d_anonymousCredential(original.d_anonymousCredential, basicAllocator)
-{
-}
+, d_anonymousCredential(original.d_anonymousCredential, basicAllocator){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-AuthenticatorConfig::AuthenticatorConfig(AuthenticatorConfig&& original)
-    noexcept : d_authenticators(bsl::move(original.d_authenticators)),
-               d_anonymousCredential(bsl::move(original.d_anonymousCredential))
+AuthenticatorConfig::AuthenticatorConfig(AuthenticatorConfig &&
+                                         original) noexcept
+: d_authenticators(bsl::move(original.d_authenticators)),
+  d_anonymousCredential(bsl::move(original.d_anonymousCredential))
 {
 }
 
@@ -6270,13 +6316,11 @@ ClusterDefinition::ClusterDefinition(const ClusterDefinition& original,
 , d_elector(original.d_elector)
 , d_clusterMonitorConfig(original.d_clusterMonitorConfig)
 , d_masterAssignment(original.d_masterAssignment)
-, d_clusterAttributes(original.d_clusterAttributes)
-{
-}
+, d_clusterAttributes(original.d_clusterAttributes){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-ClusterDefinition::ClusterDefinition(ClusterDefinition&& original) noexcept
+ClusterDefinition::ClusterDefinition(ClusterDefinition && original) noexcept
 : d_nodes(bsl::move(original.d_nodes)),
   d_name(bsl::move(original.d_name)),
   d_queueOperations(bsl::move(original.d_queueOperations)),
@@ -6471,14 +6515,12 @@ ClusterProxyDefinition::ClusterProxyDefinition(
 , d_name(original.d_name, basicAllocator)
 , d_queueOperations(original.d_queueOperations)
 , d_messageThrottleConfig(original.d_messageThrottleConfig)
-, d_clusterMonitorConfig(original.d_clusterMonitorConfig)
-{
-}
+, d_clusterMonitorConfig(original.d_clusterMonitorConfig){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-ClusterProxyDefinition::ClusterProxyDefinition(
-    ClusterProxyDefinition&& original) noexcept
+ClusterProxyDefinition::ClusterProxyDefinition(ClusterProxyDefinition &&
+                                               original) noexcept
 : d_nodes(bsl::move(original.d_nodes)),
   d_name(bsl::move(original.d_name)),
   d_queueOperations(bsl::move(original.d_queueOperations)),
@@ -6635,13 +6677,11 @@ StatsConfig::StatsConfig(const StatsConfig& original,
                          bslma::Allocator*  basicAllocator)
 : d_plugins(original.d_plugins, basicAllocator)
 , d_printer(original.d_printer, basicAllocator)
-, d_snapshotInterval(original.d_snapshotInterval)
-{
-}
+, d_snapshotInterval(original.d_snapshotInterval){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-StatsConfig::StatsConfig(StatsConfig&& original) noexcept
+StatsConfig::StatsConfig(StatsConfig && original) noexcept
 : d_plugins(bsl::move(original.d_plugins)),
   d_printer(bsl::move(original.d_printer)),
   d_snapshotInterval(bsl::move(original.d_snapshotInterval))
@@ -6932,13 +6972,11 @@ AppConfig::AppConfig(const AppConfig&  original,
 , d_logsObserverMaxSize(original.d_logsObserverMaxSize)
 , d_routeCommandTimeoutMs(original.d_routeCommandTimeoutMs)
 , d_configureStream(original.d_configureStream)
-, d_advertiseSubscriptions(original.d_advertiseSubscriptions)
-{
-}
+, d_advertiseSubscriptions(original.d_advertiseSubscriptions){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-AppConfig::AppConfig(AppConfig&& original) noexcept
+AppConfig::AppConfig(AppConfig && original) noexcept
 : d_brokerInstanceName(bsl::move(original.d_brokerInstanceName)),
   d_etcDir(bsl::move(original.d_etcDir)),
   d_hostName(bsl::move(original.d_hostName)),
@@ -7175,13 +7213,11 @@ ClustersDefinition::ClustersDefinition(const ClustersDefinition& original,
                                        bslma::Allocator* basicAllocator)
 : d_myVirtualClusters(original.d_myVirtualClusters, basicAllocator)
 , d_proxyClusters(original.d_proxyClusters, basicAllocator)
-, d_myClusters(original.d_myClusters, basicAllocator)
-{
-}
+, d_myClusters(original.d_myClusters, basicAllocator){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-ClustersDefinition::ClustersDefinition(ClustersDefinition&& original) noexcept
+ClustersDefinition::ClustersDefinition(ClustersDefinition && original) noexcept
 : d_myVirtualClusters(bsl::move(original.d_myVirtualClusters)),
   d_proxyClusters(bsl::move(original.d_proxyClusters)),
   d_myClusters(bsl::move(original.d_myClusters))
@@ -7311,13 +7347,11 @@ Configuration::Configuration(bslma::Allocator* basicAllocator)
 Configuration::Configuration(const Configuration& original,
                              bslma::Allocator*    basicAllocator)
 : d_taskConfig(original.d_taskConfig, basicAllocator)
-, d_appConfig(original.d_appConfig, basicAllocator)
-{
-}
+, d_appConfig(original.d_appConfig, basicAllocator){}
 
 #if defined(BSLS_COMPILERFEATURES_SUPPORT_RVALUE_REFERENCES) &&               \
     defined(BSLS_COMPILERFEATURES_SUPPORT_NOEXCEPT)
-Configuration::Configuration(Configuration&& original) noexcept
+Configuration::Configuration(Configuration && original) noexcept
 : d_taskConfig(bsl::move(original.d_taskConfig)),
   d_appConfig(bsl::move(original.d_appConfig))
 {
@@ -7382,6 +7416,13 @@ Configuration::print(bsl::ostream& stream, int level, int spacesPerLevel) const
 }  // close package namespace
 }  // close enterprise namespace
 
-// GENERATED BY @BLP_BAS_CODEGEN_VERSION@
+// GENERATED BY BLP_BAS_CODEGEN_2025.11.13
 // USING bas_codegen.pl -m msg --noAggregateConversion --noExternalization
 // --noIdent --package mqbcfg --msgComponent messages mqbcfg.xsd
+// ----------------------------------------------------------------------------
+// NOTICE:
+//      Copyright 2026 Bloomberg Finance L.P. All rights reserved.
+//      Property of Bloomberg Finance L.P. (BFLP)
+//      This software is made available solely pursuant to the
+//      terms of a BFLP license agreement which governs its use.
+// ------------------------------- END-OF-FILE --------------------------------
