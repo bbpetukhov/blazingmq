@@ -124,8 +124,8 @@ void PrinterManager::stop()
 }
 
 int PrinterManager::printTableStats(bsl::ostream&         stream,
-                                   int                   statsId,
-                                   const bdlt::Datetime& datetime)
+                                    int                   statsId,
+                                    const bdlt::Datetime& datetime)
 {
     return d_printer_mp->printStats(stream, statsId, datetime);
 }

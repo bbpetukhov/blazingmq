@@ -23,7 +23,7 @@
 //  mqbstat::PrinterManager: bmqbrkr statistics printer manager
 //
 //@DESCRIPTION: 'mqbstat::PrinterManager' handles the printing of all the
-//statistics.
+// statistics.
 
 // MQB
 #include <mqbcfg_messages.h>
@@ -125,15 +125,15 @@ class PrinterManager {
     /// with the description of the error.
     int start(bsl::ostream& errorDescription);
 
-    /// Stop the printer.
+    /// Stop the printer manager.
     void stop();
 
     /// Print the stats to the specified `stream`.
     ///
     /// THREAD: This method is called in the `snapshot` thread.
     int printTableStats(bsl::ostream&         stream,
-                       int                   statsId,
-                       const bdlt::Datetime& datetime);
+                        int                   statsId,
+                        const bdlt::Datetime& datetime);
 
     /// Print the stats to the specified `stream`.
     ///

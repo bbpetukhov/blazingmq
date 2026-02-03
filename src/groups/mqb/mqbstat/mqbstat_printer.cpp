@@ -194,8 +194,8 @@ void TablePrinter::stop()
 }
 
 int TablePrinter::printStats(bsl::ostream&         stream,
-                              int                   statsId,
-                              const bdlt::Datetime& datetime)
+                             int                   statsId,
+                             const bdlt::Datetime& datetime)
 {
     // This must execute in the 'snapshot' thread
 

@@ -3,5 +3,6 @@ mqbstat_clusterstats
 mqbstat_domainstats
 mqbstat_jsonprinter
 mqbstat_printer
+mqbstat_printermanager
 mqbstat_queuestats
 mqbstat_statcontroller

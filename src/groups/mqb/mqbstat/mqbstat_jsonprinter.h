@@ -84,7 +84,6 @@ class JsonPrinter {
     /// Mechanism to clean up old stat logs.
     bmqtsk::LogCleaner d_statLogCleaner;
 
-
   private:
     // NOT IMPLEMENTED
     JsonPrinter(const JsonPrinter& other) BSLS_CPP11_DELETED;

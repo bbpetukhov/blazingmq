@@ -23,7 +23,7 @@
 //  mqbstat::TablePrinter: bmqbrkr statistics printer
 //
 //@DESCRIPTION: 'mqbstat::TablePrinter' handles the printing of all the
-//statistics.
+// statistics.
 // It holds the tables and table info providers which can be printed.
 
 // MQB
@@ -141,8 +141,8 @@ class TablePrinter {
     ///
     /// THREAD: This method is called in the `snapshot` thread.
     int printStats(bsl::ostream&         stream,
-                    int                   statsId,
-                    const bdlt::Datetime& datetime);
+                   int                   statsId,
+                   const bdlt::Datetime& datetime);
 
     /// Dump the stats to the stat log file.
     void logStats(int lastStatId);
