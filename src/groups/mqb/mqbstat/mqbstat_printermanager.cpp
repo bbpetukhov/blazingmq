@@ -99,8 +99,23 @@ int PrinterManager::start(BSLA_UNUSED bsl::ostream& errorDescription)
         return 0;  // RETURN
     }
 
-    d_printer_mp->start(errorDescription);
-    d_jsonPrinter_mp->start(errorDescription);
+    // Start the table printer
+    {
+        int rc = d_printer_mp->start(errorDescription);
+        if (rc != 0) {
+            return rc;  // RETURN
+        }
+    }
+
+    // Start the json printer
+    {
+        int rc = d_jsonPrinter_mp->start(errorDescription);
+        if (rc != 0) {
+            return rc;  // RETURN
+        }
+    }
+
+    return 0;
 }
 
 void PrinterManager::stop()
