@@ -3554,7 +3554,9 @@ void StorageUtil::purgeQueueDispatched(
         return;  // RETURN
     }
 
-    mqbu::StorageKey appKey;
+    mqbu::StorageKey  appKey;
+    bmqt::MessageGUID guid;
+
     if (appId.empty()) {
         // Entire queue needs to be purged.  Note that
         // 'bmqp::ProtocolUtil::k_NULL_APP_ID' is the empty string.
@@ -3562,20 +3564,51 @@ void StorageUtil::purgeQueueDispatched(
     }
     else {
         // A specific appId (i.e., virtual storage) needs to be purged.
-        if (!storage->hasVirtualStorage(appId, &appKey)) {
-            bmqu::MemOutStream errorMsg;
-            errorMsg << "Specified appId '" << appId << "' not found in the "
-                     << "storage of queue '" << storage->queueUri() << "'.";
-            mqbcmd::Error& error = purgedQueueResult->makeError();
-            error.message()      = errorMsg.str();
-            return;  // RETURN
+        if (storage->hasVirtualStorage(appId, &appKey)) {
+            // Found appId and filled appKey.
+        }
+        else {
+            guid.fromHex(appId.c_str());
+
+            if (storage->hasMessage(guid)) {
+                // Found GUID
+
+                // If appId does not contain valid appKey,
+                // then it may contain message GUID.
+
+                appKey = mqbu::StorageKey::k_NULL_KEY;
+            }
+            else {
+                bmqu::MemOutStream errorMsg;
+                errorMsg << "Specified appId '" << appId
+                         << "' not found in the " << "storage of queue '"
+                         << storage->queueUri() << "'.";
+                mqbcmd::Error& error = purgedQueueResult->makeError();
+                error.message()      = errorMsg.str();
+                return;  // RETURN
+            }
         }
     }
 
-    const bsls::Types::Uint64 numMsgs  = storage->numMessages(appKey);
-    const bsls::Types::Uint64 numBytes = storage->numBytes(appKey);
+    bsls::Types::Uint64 numMsgs;
+    bsls::Types::Uint64 numBytes;
 
-    const mqbi::StorageResult::Enum rc = storage->removeAll(appKey);
+    mqbi::StorageResult::Enum rc;
+
+    if (guid.isUnset()) {
+        storage->removeAll(appKey);
+
+        numMsgs  = storage->numMessages(appKey);
+        numBytes = storage->numBytes(appKey);
+    }
+    else {
+        int msgSize;
+        storage->remove(guid, &msgSize);
+
+        numMsgs  = 1;
+        numBytes = msgSize;
+    }
+
     if (rc != mqbi::StorageResult::e_SUCCESS) {
         bmqu::MemOutStream errorMsg;
         errorMsg << "Failed to purge appId '" << appId << "', appKey '"
@@ -3587,9 +3620,11 @@ void StorageUtil::purgeQueueDispatched(
         return;  // RETURN
     }
 
-    if (storage->queue()) {
-        BSLS_ASSERT_SAFE(storage->queue()->queueEngine());
-        storage->queue()->queueEngine()->afterQueuePurged(appId, appKey);
+    if (guid.isUnset()) {
+        if (storage->queue()) {
+            BSLS_ASSERT_SAFE(storage->queue()->queueEngine());
+            storage->queue()->queueEngine()->afterQueuePurged(appId, appKey);
+        }
     }
 
     mqbcmd::PurgedQueueDetails& queueDetails = purgedQueueResult->makeQueue();

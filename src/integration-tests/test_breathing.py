@@ -863,6 +863,52 @@ def test_queue_purge_command(multi_node: Cluster, domain_urls: tc.DomainUrls):
         assert len(msgs) == 0
 
 
+def test_purge_guid(cluster: Cluster, domain_urls: tc.DomainUrls):
+    """
+    Test that purging a message by its GUID works as expected.
+    """
+
+    du = domain_urls
+    proxy = next(cluster.proxy_cycle())
+
+    producer = proxy.create_client("producer")
+    producer.open(du.uri_priority, flags=["write", "ack"], succeed=True)
+    consumer = proxy.create_client("consumer")
+    consumer.open(du.uri_priority, flags=["read"], succeed=True)
+    consumers = [consumer]
+
+    producer.post(du.uri_priority, ["msg1"], succeed=True, wait_ack=True)
+    producer.post(du.uri_priority, ["msg2"], succeed=True, wait_ack=True)
+
+    for consumer in consumers:
+        assert consumer.wait_push_event(timeout=2, quiet=True), (
+            "Did not expect a push event before purge"
+        )
+        msgs = consumer.list(block=True)
+        assert len(msgs) == 2, "Expected 2 messages before purge, got {}".format(
+            len(msgs)
+        )
+
+    guids = [msg.guid for msg in consumer.list(du.uri_priority, block=True)]
+    guid = guids[0]
+
+    print(f"Purging message with guid {guid}")
+
+    leader = cluster.last_known_leader
+    leader.command(
+        f"DOMAINS DOMAIN {du.domain_priority} QUEUE {tc.TEST_QUEUE} PURGE {guid}"
+    )
+
+    for consumer in consumers:
+        assert not consumer.wait_push_event(timeout=2, quiet=True), (
+            "Did not expect a push event after purge"
+        )
+        msgs = consumer.list(block=True)
+        assert len(msgs) == 1, "Expected 1 message after purge, got {}".format(
+            len(msgs)
+        )
+
+
 def test_wrong_domain(cluster: Cluster, domain_urls: tc.DomainUrls):
     """
     Test that opening a queue in a non-existent domain fails, while opening
